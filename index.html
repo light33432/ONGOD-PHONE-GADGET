@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="google-site-verification" content="CMIRra_jnjU7Xx5sMmBx-7bsAhooKda0q1vgNdG0qvg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="phone.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <title>ONGOD PHONE GADGET</title>
+</head>
+<body>
+   <!-- Login/Register Modal -->
+   <!-- Login/Register Modal -->
+<section>
+<div id="login-modal">
+    <div id="login-box">
+        <h2 id="login-title">Login</h2>
+        <input type="text" id="login-username" placeholder="Username" autocomplete="off"><br>
+        <input type="password" id="login-password" placeholder="Password"><br>
+        <button id="login-btn" onclick="login()">Login</button>
+        <button id="register-btn" onclick="register()" style="display:none;">Register</button>
+        <div>
+            <span class="switch-link" id="switch-to-register" onclick="showRegister()">Don't have an account? Register</span>
+            <span class="switch-link" id="switch-to-login" onclick="showLogin()" style="display:none;">Already have an account? Login</span>
+        </div>
+        <div id="login-error" style="color:#e74c3c;margin-top:10px;"></div>
+    </div>
+    <!-- Registration Address Modal -->
+    <div id="register-form-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:10000;">
+        <div style="background:#fff;padding:28px 20px;border-radius:12px;max-width:350px;box-shadow:0 4px 24px rgba(0,0,0,0.18);text-align:center;position:relative;margin:auto;">
+            <h2 style="color:#0078d7;">Complete Registration</h2>
+            <label>State:<br>
+                <select id="reg-state" style="width:90%;padding:8px;margin:8px 0;border-radius:5px;">
+                    <option value="">Select State</option>
+                    <option>Abia</option><option>Adamawa</option><option>Akwa Ibom</option><option>Anambra</option>
+                    <option>Bauchi</option><option>Bayelsa</option><option>Benue</option><option>Borno</option>
+                    <option>Cross River</option><option>Delta</option><option>Ebonyi</option><option>Edo</option>
+                    <option>Ekiti</option><option>Enugu</option><option>FCT</option><option>Gombe</option>
+                    <option>Imo</option><option>Jigawa</option><option>Kaduna</option><option>Kano</option>
+                    <option>Katsina</option><option>Kebbi</option><option>Kogi</option><option>Kwara</option>
+                    <option>Lagos</option><option>Nasarawa</option><option>Niger</option><option>Ogun</option>
+                    <option>Ondo</option><option>Osun</option><option>Oyo</option><option>Plateau</option>
+                    <option>Rivers</option><option>Sokoto</option><option>Taraba</option><option>Yobe</option>
+                    <option>Zamfara</option><option>Abuja</option><option></option>
+                </select>
+            </label><br>
+            <label>Area:<br>
+                <select id="reg-area" style="width:90%;padding:8px;margin:8px 0;border-radius:5px;">
+                    <option value="">Select Area</option>
+                </select>
+            </label><br>
+            <label>Street:<br>
+                <input type="text" id="reg-street" placeholder="Street" style="width:90%;padding:8px;margin:8px 0;border-radius:5px;">
+            </label><br>
+            <button onclick="completeRegistration()" style="background:#0078d7;color:#fff;border:none;border-radius:5px;padding:10px 18px;font-size:1em;cursor:pointer;margin-top:10px;">Finish</button>
+            <button onclick="document.getElementById('register-form-modal').style.display='none';" style="margin-left:10px;background:#e74c3c;color:#fff;border:none;border-radius:5px;padding:10px 18px;font-size:1em;cursor:pointer;">Cancel</button>
+            <div id="reg-error" style="color:#e74c3c;margin-top:10px;"></div>
+        </div>
+    </div>
+</div>
+<style>
+/* ...existing code... */
+
+/* Header and Navigation */
+.header-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+
+/* Notification Icon Placement */
+.header-actions {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 100%;
+    padding-right: 10px;
+}
+
+#notification-btn {
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+    background: rgba(0, 120, 215, 0.1);
+    border-radius: 50%;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#notification-btn:hover {
+    transform: scale(1.1) rotate(15deg);
+    background: rgba(0, 120, 215, 0.2);
+}
+
+.notif-dot {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 12px;
+    height: 12px;
+    background: var(--danger);
+    border-radius: 50%;
+    border: 2px solid #fff;
+    animation: pulse 1.5s infinite;
+}
+
+/* Responsive: keep notification icon at top right */
+@media (max-width: 900px) {
+    .header-container {
+        padding: 0 10px;
+    }
+    .header-actions {
+        padding-right: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-container {
+        flex-direction: row;
+        padding: 0 5px;
+    }
+    .header-actions {
+        right: 5px;
+        padding-right: 0;
+    }
+}
+
+/* ...rest of your code... */
+
+     </style>
+</section>
+</section>
+    <!-- Main Content -->
+<div id="main-content">
+    <header>
+        <div class="header-container">
+            <div class="header-logo">
+            <img src="Gemini_Generated_Image_63jjax63jjax63jj.png" alt="ONGOD Logo" class="logo" width="100" height="50" align="left">
+                <div class="header-title">ONGOD PHONE GADGET</div>
+
+            </div>
+            </div>  
+            <div class="header-actions">
+                <img src="notification icon.png" alt="Notification" class="icon" id="notification-btn" style="cursor:pointer;position:relative; width: 20px; height: 20px;align-self: center;">
+<div id="notification-history-modal" style="display:none;position:fixed;top:80px;right:20px;min-width:300px;max-width:90vw;max-height:70vh;overflow-y:auto;background:#fff;color:#222;border:2px solid #0078d7;z-index:3000;padding:18px 12px;border-radius:8px;">
+    <h3 style="color:#0078d7;margin-top:0;">Notification History</h3>
+    <div id="notification-history-list"></div>
+    <button onclick="document.getElementById('notification-history-modal').style.display='none';" style="background:#0078d7;color:#fff;border:none;border-radius:5px;padding:6px 16px;margin-top:10px;cursor:pointer;">Close</button>
+    <button onclick="clearNotifications()" style="background:#e74c3c;color:#fff;border:none;border-radius:5px;padding:6px 16px;margin-top:10px;cursor:pointer;float:right;">Clear All</button>
+</div>
+        </div>
+    </header>
+    <br>
+    <section class="search-bar">
+        <input type="text" id="search-input" placeholder="Search for gadgets...">
+        <button id="search-btn" onclick="searchGadgets()">Search</button>   
+        </section>
+        <main>
+            <h1 class="main-title">Latest Phones, Laptops & Accessories</h1>
+            <!-- PHONES -->
+            <div class="section-title">Phones</div>
+            <section class="Gadget-list">
+                <div class="Gadget-item"><img src="phone1.webp" alt="Redmin"><h2>Redmin</h2><p>Price:#200,000</p><div class="button-group"><button onclick="viewDetails('Redmin', 200, 'phone1.webp')">View Details</button><button onclick="buyNow('Redmin', 200)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="phone2.jpeg" alt="Iphone"><h2>Iphone</h2><p>Price: #500,000</p><div class="button-group"><button onclick="viewDetails('Iphone', 300, 'phone2.jpeg')">View Details</button><button onclick="buyNow('Iphone', 300)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="phone13.webp" alt="Samsung Galaxy"><h2>Samsung Galaxy</h2><p>Price:#400,000</p><div class="button-group"><button onclick="viewDetails('Samsung Galaxy', 400, 'phone3.jpeg')">View Details</button><button onclick="buyNow('Samsung Galaxy', 400)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="phone19.jpeg" alt="OnePlus"><h2>Samsung Galaxy Fold</h2><p>Price: #350,000</p><div class="button-group"><button onclick="viewDetails('OnePlus', 350, 'phone4.jpeg')">View Details</button><button onclick="buyNow('OnePlus', 350)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="phone5.jpeg" alt="Google Pixel"><h2>Google Pixel</h2><p>Price: #450,000</p><div class="button-group"><button onclick="viewDetails('Google Pixel', 450, 'phone5.jpeg')">View Details</button><button onclick="buyNow('Google Pixel', 450)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="phone2.webp" alt="Huawei P30"><h2>Redmin</h2><p>Price: #500,000</p><div class="button-group"><button onclick="viewDetails('Huawei P30', 500, 'phone6.jpeg')">View Details</button><button onclick="buyNow('Huawei P30', 500)">Buy Now</button></div></div>
+
+                <div class="Gadget-item"><img src="phone9.jpeg" alt="Vivo V21"><h2>Samsung A34</h2><p>Price: #280,000</p><div class="button-group"><button onclick="viewDetails('Vivo V21', 280, 'phone9.jpeg')">View Details</button><button onclick="buyNow('Vivo V21', 280)">Buy Now</button></div></div>
+
+                <div class="Gadget-item"><img src="motor.jpeg" alt="Motorola Edge"><h2>Motorola Edge</h2><p>Price: #380,000</p><div class="button-group"><button onclick="viewDetails('Motorola Edge', 380, 'motor.jpeg')">View Details</button><button onclick="buyNow('Motorola Edge', 380)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="lg.webp" alt="LG Velvet"><h2>LG Velvet</h2><p>Price: #320,000</p><div class="button-group"><button onclick="viewDetails('LG Velvet', 320, 'lg.webp')">View Details</button><button onclick="buyNow('LG Velvet', 320)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="phone12.jpeg" alt="Nokia 8.3"><h2>Nokia 8.3</h2><p>Price: #360,000</p><div class="button-group"><button onclick="viewDetails('Nokia 8.3', 360, 'nokia.webp')">View Details</button><button onclick="buyNow('Nokia 8.3', 360)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="Azus.jpeg" alt="Asus Zenfone"><h2>Asus Zenfone</h2><p>Price: #400,000</p><div class="button-group"><button onclick="viewDetails('Asus Zenfone', 400, 'Azus.jpeg')">View Details</button><button onclick="buyNow('Asus Zenfone', 400)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="phone15.jpeg" alt="Sony Xperia"><h2>Sony Xperia</h2><p>Price: #450,000</p><div class="button-group"><button onclick="viewDetails('Sony Xperia', 450, 'phone15.jpeg')">View Details</button><button onclick="buyNow('Sony Xperia', 450)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="Htc - Copy.jpeg" alt="HTC U20"><h2>HTC U20</h2><p>Price: #300,000</p><div class="button-group"><button onclick="viewDetails('HTC U20', 300, 'Htc - Copy.jpeg')">View Details</button><button onclick="buyNow('HTC U20', 300)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="black berry - Copy.jpeg" alt="BlackBerry Key2"><h2>BlackBerry Key2</h2><p>Price: #400,000</p><div class="button-group"><button onclick="viewDetails('BlackBerry Key2', 400, 'black berry - Copy.jpeg')">View Details</button><button onclick="buyNow('BlackBerry Key2', 400)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="Realme.jpeg" alt="Realme X50"><h2>Realme X50</h2><p>Price: #280,000</p><div class="button-group"><button onclick="viewDetails('Realme X50', 280, 'phone19.jpeg')">View Details</button><button onclick="buyNow('Realme X50', 280)">Buy Now</button></div></div>
+                </div>
+                <div class="more-phones">
+  <a href="#" id="show-more-phones-btn" onclick="showMorePhones(event)">View More Phones</a>
+<!-- Hidden gadgets start -->
+<div id="more-phones-list" style="display:none;">
+  <div class="Gadget-list" style="margin-top: 10px;">
+    <div class="Gadget-item"><img src="phone10.jpeg" alt="Oppo Reno"><h2>Oppo Reno</h2><p>Price: #300,000</p><div class="button-group"><button onclick="viewDetails('Oppo Reno', 300, 'phone10.jpeg')">View Details</button><button onclick="buyNow('Oppo Reno', 300)">Buy Now</button></div></div>
+    <div class="Gadget-item"><img src="phone11.jpeg" alt="Xiaomi Mi 10"><h2>Xiaomi Mi 10</h2><p>Price: #350,000</p><div class="button-group"><button onclick="viewDetails('Xiaomi Mi 10', 350, 'phone11.jpeg')">View Details</button><button onclick="buyNow('Xiaomi Mi 10', 350)">Buy Now</button></div></div>
+    <div class="Gadget-item"><img src="phone14.jpeg" alt="Tecno Camon 16"><h2>Tecno Camon 16</h2><p>Price: #200,000</p><div class="button-group"><button onclick="viewDetails('Tecno Camon 16', 200, 'phone14.jpeg')">View Details</button><button onclick="buyNow('Tecno Camon 16', 200)">Buy Now</button></div></div>
+    <div class="Gadget-item"><img src="phone16.jpeg" alt="Infinix Zero 8"><h2>Infinix Zero 8</h2><p>Price: #180,000</p><div class="button-group"><button onclick="viewDetails('Infinix Zero 8', 180, 'phone16.jpeg')">View Details</button><button onclick="buyNow('Infinix Zero 8', 180)">Buy Now</button></div></div>
+    <div class="Gadget-item"><img src="phone17.jpeg" alt="Tecno Spark 6"><h2>Tecno Spark 6</h2><p>Price: #150,000</p><div class="button-group"><button onclick="viewDetails('Tecno Spark 6', 150, 'phone17.jpeg')">View Details</button><button onclick="buyNow('Tecno Spark 6', 150)">Buy Now</button></div></div>
+    <div class="Gadget-item"><img src="phone18.jpeg" alt="Infinix Hot 10"><h2>Infinix Hot 10</h2><p>Price: #120,000</p><div class="button-group"><button onclick="viewDetails('Infinix Hot 10', 120, 'phone18.jpeg')">View Details</button><button onclick="buyNow('Infinix Hot 10', 120)">Buy Now</button></div></div>
+    <div class="Gadget-item"><img src="phone20.jpeg" alt="Vivo Y20"><h2>Vivo Y20</h2><p>Price: #130,000</p><div class="button-group"><button onclick="viewDetails('Vivo Y20', 130, 'phone20.jpeg')">View Details</button><button onclick="buyNow('Vivo Y20', 130)">Buy Now</button></div></div>
+  </div>
+</div>
+<script>
+function showMorePhones(e) {
+  e.preventDefault();
+  var morePhones = document.getElementById('more-phones-list');
+  if (morePhones.style.display === 'none') {
+    morePhones.style.display = '';
+    document.getElementById('show-more-phones-btn').innerText = "Hide More Phones";
+  } else {
+    morePhones.style.display = 'none';
+    document.getElementById('show-more-phones-btn').innerText = "View More Phones";
+  }
+}
+</script>
+            </section>
+            <!-- LAPTOPS -->
+            <div class="section-title">Laptops</div>
+            <section class="Gadget-list">
+                <div class="Gadget-item"><img src="laptop1.jpeg" alt="Dell"><h2>Dell</h2><p>Price: #800,000</p><div class="button-group"><button onclick="viewDetails('Dell', 800, 'laptop1.jpeg')">View Details</button><button onclick="buyNow('Dell', 800)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="laptop2.jpeg" alt="HP"><h2>HP</h2><p>Price: #750,000</p><div class="button-group"><button onclick="viewDetails('HP', 750, 'laptop2.jpeg')">View Details</button><button onclick="buyNow('HP', 750)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="laptop3.jpeg" alt="Lenovo"><h2>Lenovo</h2><p>Price: #700,000</p><div class="button-group"><button onclick="viewDetails('Lenovo', 700, 'laptop3.jpeg')">View Details</button><button onclick="buyNow('Lenovo', 700)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="laptop4.jpeg" alt="Apple"><h2>Apple</h2><p>Price: #1200,000</p><div class="button-group"><button onclick="viewDetails('Apple', 1200, 'laptop4.jpeg')">View Details</button><button onclick="buyNow('Apple', 1200)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="laptop5.webp" alt="Asus"><h2>Asus</h2><p>Price: #900,000</p><div class="button-group"><button onclick="viewDetails('Asus', 900, 'laptop5.jpeg')">View Details</button><button onclick="buyNow('Asus', 900)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="laptop6.jpeg" alt="Acer"><h2>Acer</h2><p>Price: #650,000</p><div class="button-group"><button onclick="viewDetails('Acer', 650, 'laptop6.jpeg')">View Details</button><button onclick="buyNow('Acer', 650)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="laptop7.webp" alt="Microsoft"><h2>Microsoft</h2><p>Price: #1100,000</p><div class="button-group"><button onclick="viewDetails('Microsoft', 1100, 'laptop7.webp')">View Details</button><button onclick="buyNow('Microsoft', 1100)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="laptop8.webp" alt="Razer"><h2>Razer</h2><p>Price: #1500,000</p><div class="button-group"><button onclick="viewDetails('Razer', 1500, 'laptop8.jpeg')">View Details</button><button onclick="buyNow('Razer', 1500)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="laptop9.jpeg" alt="Alienware"><h2>Alienware</h2><p>Price: #200,000</p><div class="button-group"><button onclick="viewDetails('Alienware', 2000, 'laptop9.jpeg')">View Details</button><button onclick="buyNow('Alienware', 2000)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="laptop10.jpeg" alt="MSI"><h2>MSI</h2><p>Price: #130,000</p><div class="button-group"><button onclick="viewDetails('MSI', 1300, 'laptop10.jpeg')">View Details</button><button onclick="buyNow('MSI', 1300)">Buy Now</button></div></div>
+                </div>
+                <div class="more-laptops">
+  <a href="#" id="show-more-laptops-btn" onclick="showMoreLaptops(event)">View More Laptops</a>
+<!-- Hidden gadgets start -->
+<div id="more-laptops-list" style="display:none;">
+    <div class="Gadget-list" style="margin-top: 10px;">
+        <div class="Gadget-item"><img src="laptop11.jpeg" alt="Gigabyte"><h2>Gigabyte</h2><p>Price: #140,000</p><div class="button-group"><button onclick="viewDetails('Gigabyte', 1400, 'laptop11.jpeg')">View Details</button><button onclick="buyNow('Gigabyte', 1400)">Buy Now</button></div></div>
+        <div class="Gadget-item"><img src="laptop12.jpeg" alt="Toshiba"><h2>Toshiba</h2><p>Price: #600,000</p><div class="button-group"><button onclick="viewDetails('Toshiba', 600, 'laptop12.jpeg')">View Details</button><button onclick="buyNow('Toshiba', 600)">Buy Now</button></div></div>
+        <div class="Gadget-item"><img src="laptop13.jpeg" alt="Huawei MateBook"><h2>Huawei MateBook</h2><p>Price: #700,000</p><div class="button-group"><button onclick="viewDetails('Huawei MateBook', 700, 'laptop13.jpeg')">View Details</button><button onclick="buyNow('Huawei MateBook', 700)">Buy Now</button></div></div>
+        <div class="Gadget-item"><img src="laptop14.jpeg" alt="LG Gram"><h2>LG Gram</h2><p>Price: #800,000</p><div class="button-group"><button onclick="viewDetails('LG Gram', 800, 'laptop14.jpeg')">View Details</button><button onclick="buyNow('LG Gram', 800)">Buy Now</button></div></div>
+        <div class="Gadget-item"><img src="laptop15.jpeg" alt="Samsung Galaxy Book"><h2>Samsung Galaxy Book</h2><p>Price: #900,000</p><div class="button-group"><button onclick="viewDetails('Samsung Galaxy Book', 900, 'laptop15.jpeg')">View Details</button><button onclick="buyNow('Samsung Galaxy Book', 900)">Buy Now</button></div></div>
+    </div>
+</div>
+<script>
+function showMoreLaptops(e) {
+    e.preventDefault();
+    var moreLaptops = document.getElementById('more-laptops-list');
+    if (moreLaptops.style.display === 'none') {
+        moreLaptops.style.display = '';
+        document.getElementById('show-more-laptops-btn').innerText = "Hide More Laptops";
+    } else {
+        moreLaptops.style.display = 'none';
+        document.getElementById('show-more-laptops-btn').innerText = "View More Laptops";
+    }
+}
+</script>
+            </section>
+            <!-- ACCESSORIES -->
+            <div class="section-title">Accessories</div>
+            <section class="Gadget-list">
+                <div class="Gadget-item"><img src="sandiskssd.jpeg" alt="SanDisk SSD"><h2>SanDisk SSD</h2><p>Price: #10,000</p><div class="button-group"><button onclick="viewDetails('SanDisk SSD', 100, 'sandiskssd.jpeg')">View Details</button><button onclick="buyNow('SanDisk SSD', 100)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="samsungbunds.jpeg" alt="Samsung Buds"><h2>Samsung Buds</h2><p>Price: #15,000</p><div class="button-group"><button onclick="viewDetails('Samsung Buds', 150, 'samsungbunds.jpeg')">View Details</button><button onclick="buyNow('Samsung Buds', 150)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="applewatch.jpeg" alt="Apple Watch"><h2>Apple Watch</h2><p>Price: #4,000</p><div class="button-group"><button onclick="viewDetails('Apple Watch', 400, 'applewatch.jpeg')">View Details</button><button onclick="buyNow('Apple Watch', 400)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="jblgo3.jpeg" alt="JBL Go 3"><h2>JBL Go 3</h2><p>Price: $25,000</p><div class="button-group"><button onclick="viewDetails('JBL Go 3', 250, 'jblgo3.jpeg')">View Details</button><button onclick="buyNow('JBL Go 3', 250)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="apowerbanknker.jpeg" alt="Anker Power Bank"><h2>Anker Power Bank</h2><p>Price: $30,000</p><div class="button-group"><button onclick="viewDetails('Anker Power Bank', 300, 'apowerbanknker.jpeg')">View Details</button><button onclick="buyNow('Anker Power Bank', 300)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="ankercharger.jpeg" alt="Anker Charger"><h2>Anker Charger</h2><p>Price: #35,000</p><div class="button-group"><button onclick="viewDetails('Anker Charger', 350, 'ankercharger.jpeg')">View Details</button><button onclick="buyNow('Anker Charger', 350)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="airpod.jpeg" alt="Apple AirPods"><h2>Apple AirPods</h2><p>Price: #20,000</p><div class="button-group"><button onclick="viewDetails('Apple AirPods', 200, 'airpod.jpeg')">View Details</button><button onclick="buyNow('Apple AirPods', 200)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="logitechkeyboard.jpeg" alt="Logitech Keyboard"><h2>Logitech Keyboard</h2><p>Price: #12,000</p><div class="button-group"><button onclick="viewDetails('Logitech Keyboard', 120, 'logitechkeyboard.jpeg')">View Details</button><button onclick="buyNow('Logitech Keyboard', 120)">Buy Now</button></div></div>
+                <div class="Gadget-item"><img src="logitechmouse.jpeg" alt="Logitech Mouse"><h2>Logitech Mouse</h2><p>Price: #80,000</p><div class="button-group"><button onclick="viewDetails('Logitech Mouse', 80, 'logitechmouse.jpeg')">View Details</button><button onclick="buyNow('Logitech Mouse', 80)">Buy Now</button></div></div>
+                </div>
+                <div class="more-accessories">]
+    <a href="#" id="show-more-accessories-btn" onclick="showMoreAccessories(event)">View More Accessories</a>
+<!-- Hidden gadgets start -->
+<div id="more-accessories-list" style="display:none;">
+    <div class="Gadget-list" style="margin-top: 10px;">
+        <div class="Gadget-item"><img src="samsungcharger.jpeg" alt="Samsung Charger"><h2>Samsung Charger</h2><p>Price: #18,000</p><div class="button-group"><button onclick="viewDetails('Samsung Charger', 180, 'samsungcharger.jpeg')">View Details</button><button onclick="buyNow('Samsung Charger', 180)">Buy Now</button></div></div>
+        <div class="Gadget-item"><img src="samsungbuds.jpeg" alt="Samsung Buds Pro"><h2>Samsung Buds Pro</h2><p>Price: #22,000</p><div class="button-group"><button onclick="viewDetails('Samsung Buds Pro', 220, 'samsungbuds.jpeg')">View Details</button><button onclick="buyNow('Samsung Buds Pro', 220)">Buy Now</button></div></div>
+        <div class="Gadget-item"><img src="samsungwatch.jpeg" alt="Samsung Galaxy Watch"><h2>Samsung Galaxy Watch</h2><p>Price: #50,000</p><div class="button-group"><button onclick="viewDetails('Samsung Galaxy Watch', 500, 'samsungwatch.jpeg')">View Details</button><button onclick="buyNow('Samsung Galaxy Watch', 500)">Buy Now</button></div></div>
+        <div class="Gadget-item"><img src="ankerwirelesscharger.jpeg" alt="Anker Wireless Charger"><h2>Anker Wireless Charger</h2><p>Price: #15,000</p><div class="button-group"><button onclick="viewDetails('Anker Wireless Charger', 150, 'ankerwirelesscharger.jpeg')">View Details</button><button onclick="buyNow('Anker Wireless Charger', 150)">Buy Now</button></div></div>
+        </div>
+</div>
+<script>
+function showMoreAccessories(e) {
+    e.preventDefault();
+    var moreAccessories = document.getElementById('more-accessories-list');
+    if (moreAccessories.style.display === 'none') {
+        moreAccessories.style.display = '';
+        document.getElementById('show-more-accessories-btn').innerText = "Hide More Accessories";
+    } else {
+        moreAccessories.style.display = 'none';
+        document.getElementById('show-more-accessories-btn').innerText = "View More Accessories";
+    }
+}
+</script>
+            </section>
+           <!-- Floating Chat Button (use your own icon image) -->
+<button id="ai-chat-btn" title="Chat with AI" style="position:fixed;bottom:30px;right:30px;z-index:10001;background:#0078d7;border:none;border-radius:50%;width:60px;height:60px;box-shadow:0 2px 8px rgba(0,0,0,0.18);cursor:pointer;">
+  <img src="profile.jpeg" alt="AI Chat" style="width:32px;height:32px;">
+</button>
+
+<!-- AI Chat Window -->
+<div id="ai-chat-modal" style="display:none;position:fixed;bottom:100px;right:30px;width:320px;max-width:95vw;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.18);z-index:10002;flex-direction:column;">
+  <div style="background:#0078d7;color:#fff;padding:14px 18px;border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:space-between;">
+    <span><img src="profile.jpeg" alt="AI" style="width:24px;height:24px;vertical-align:middle;margin-right:6px;"> ONGOD AI Assistant</span>
+    <button onclick="document.getElementById('ai-chat-modal').style.display='none';" style="background:none;border:none;color:#fff;font-size:1.3em;cursor:pointer;">&times;</button>
+  </div>
+  <div id="ai-chat-messages" style="padding:16px;max-height:220px;overflow-y:auto;font-size:1em;background:#f6fafd;"></div>
+  <form id="ai-chat-form" style="display:flex;gap:6px;padding:10px;" onsubmit="event.preventDefault(); sendAIMessage();">
+    <input type="text" id="ai-chat-input" placeholder="Type your message..." required style="flex:1;padding:8px;border-radius:6px;border:1px solid #ccc;">
+    <button type="submit" style="background:#0078d7;color:#fff;border:none;border-radius:6px;padding:8px 14px;">Send</button>
+  </form>
+</div>
+        </main>
+        <section class="contact-us">
+            <h2>Contact Us</h2>
+            <p>Email: <a href="mailto:ayomideoluniyi49@gmail.com">ayomideoluniyi49@gmail.com</a></p>
+            <p>Phone: <a href="tel:+2349138154963">+234 9138154963</a></p>
+            <p>Address: NO 12, Gadget Avenue, Tech City, Nigeria</p>
+            <p><button onclick="showMapModal()">View Map</button></p>
+        </section>
+        <footer class="footer">
+            <p>&copy; 2025 Gadget Store. All rights reserved.</p>
+        </footer>
+    </div>
+    <script>
+
+// --- LOGIN/REGISTER LOGIC ---
+function showRegister() {
+    document.getElementById('login-title').innerText = "Register";
+    document.getElementById('login-btn').style.display = "none";
+    document.getElementById('register-btn').style.display = "inline-block";
+    document.getElementById('switch-to-register').style.display = "none";
+    document.getElementById('switch-to-login').style.display = "inline-block";
+    document.getElementById('login-error').innerText = "";
+}
+
+function showLogin() {
+    document.getElementById('login-title').innerText = "Login";
+    document.getElementById('login-btn').style.display = "inline-block";
+    document.getElementById('register-btn').style.display = "none";
+    document.getElementById('switch-to-register').style.display = "inline-block";
+    document.getElementById('switch-to-login').style.display = "none";
+    document.getElementById('login-error').innerText = "";
+}
+
+function login() {
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    const users = JSON.parse(localStorage.getItem('gadgetUsers') || '{}');
+    if (users[username] && users[username] === password) {
+        localStorage.setItem('gadgetLoggedIn', username);
+        document.getElementById('login-modal').style.display = "none";
+        document.getElementById('main-content').style.display = "block";
+    } else {
+        document.getElementById('login-error').innerText = "Invalid username or password.";
+    }
+}
+
+function register() {
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    if (!username || !password) {
+        document.getElementById('login-error').innerText = "Please enter username and password.";
+        return;
+    }
+    let users = JSON.parse(localStorage.getItem('gadgetUsers') || '{}');
+    if (users[username]) {
+        document.getElementById('login-error').innerText = "Username already exists.";
+        return;
+    }
+    document.getElementById('register-form-modal').style.display = 'flex';
+    window._pendingReg = { username, password };
+}
+
+// --- State and Area Data ---
+const stateAreaData = {
+    "Abia": ["Aba North", "Aba South", "Umuahia", "Isiala Ngwa North", "Isiala Ngwa South"],
+    "Adamawa": ["Yola North", "Yola South", "Mubi North", "Mubi South", "Ganye"],
+    "Akwa Ibom": ["Uyo", "Ikot Ekpene", "Eket", "Abak", "Etinan"],
+    "Anambra": ["Awka", "Onitsha", "Nnewi", "Ekwulobia", "Ogidi"],
+    "Bauchi": ["Bauchi", "Azare", "Misau", "Ningi", "Darazo"],
+    "Bayelsa": ["Yenagoa", "Brass", "Southern Ijaw", "Ekeremor", "Kolokuma/Opokuma"],
+    "Benue": ["Makurdi", "Gboko", "Otukpo", "Vandeikya", "Katsina-Ala"],
+    "Borno": ["Maiduguri", "Biu", "Gubio", "Dikwa", "Ngala"],
+    "Cross River": ["Calabar Municipal", "Calabar South", "Ogoja", "Ikom", "Obubra"],
+    "Delta": ["Warri", "Asaba", "Ughelli", "Sapele", "Effurun"],
+    "Ebonyi": ["Abakaliki", "Afikpo North", "Ikwo", "Ezza North", "Ishielu"],
+    "Edo": ["Benin City", "Ekpoma", "Auchi", "Igueben", "Uromi"],
+    "Ekiti": ["Ado-Ekiti", "Ikere-Ekiti", "Ise-Ekiti", "Emure-Ekiti", "Oye-Ekiti"],
+    "Enugu": ["Enugu North", "Enugu South", "Nsukka", "Udi", "Oji River"],
+    "FCT": ["Garki", "Wuse", "Maitama", "Asokoro", "Gwarinpa"],
+    "Gombe": ["Gombe", "Kaltungo", "Bajoga", "Billiri", "Akko"],
+    "Imo": ["Owerri Municipal", "Owerri North", "Orlu", "Okigwe", "Mbaitoli"],
+    "Jigawa": ["Dutse", "Babura", "Kazaure", "Gwaram", "Hadejia"],
+    "Kaduna": ["Kaduna North", "Kaduna South", "Zaria", "Kachia", "Kafanchan"],
+    "Kano": ["Fagge", "Dala", "Gwale", "Kumbotso", "Tarauni"],
+    "Katsina": ["Katsina", "Daura", "Funtua", "Malumfashi", "Dutsin-Ma"],
+    "Kebbi": ["Birnin Kebbi", "Argungu", "Yauri", "Zuru", "Jega"],
+    "Kogi": ["Lokoja", "Okene", "Idah", "Ajaokuta", "Kabba"],
+    "Kwara": ["Ilorin West", "Ilorin East", "Offa", "Omu-Aran", "Kaiama"],
+    "Lagos": ["Ikeja", "Surulere", "Lekki", "Yaba", "Ikorodu", "Epe", "Badagry"],
+    "Nasarawa": ["Lafia", "Keffi", "Akwanga", "Karu", "Doma"],
+    "Niger": ["Minna", "Bida", "Suleja", "Kontagora", "Mokwa"],
+    "Ogun": ["Abeokuta North", "Abeokuta South", "Ifo", "Ijebu Ode", "Sagamu"],
+    "Ondo": ["Akure", "Ondo Town", "Owo", "Ikare", "Okitipupa"],
+    "Osun": ["Osogbo", "Ilesa", "Ife Central", "Ife East", "Iwo"],
+    "Oyo": ["Ibadan North", "Ibadan South-West", "Ogbomosho", "Oyo East", "Oyo West"],
+    "Plateau": ["Jos North", "Jos South", "Barkin Ladi", "Pankshin", "Shendam"],
+    "Rivers": ["Port Harcourt", "Obio-Akpor", "Eleme", "Oyigbo", "Ikwerre"],
+    "Sokoto": ["Sokoto North", "Sokoto South", "Wamakko", "Tambuwal", "Gwadabawa"],
+    "Taraba": ["Jalingo", "Wukari", "Bali", "Gassol", "Karim Lamido"],
+    "Yobe": ["Damaturu", "Potiskum", "Gashua", "Bade", "Fika"],
+    "Zamfara": ["Gusau", "Kaura Namoda", "Talata Mafara", "Anka", "Maru"],
+    "Abuja": ["Central Area", "Garki", "Wuse", "Maitama", "Asokoro"]
+};
+
+// Populate Area dropdown based on selected State
+document.getElementById('reg-state').onchange = function() {
+    const state = this.value;
+    const areaSelect = document.getElementById('reg-area');
+    areaSelect.innerHTML = '<option value="">Select Area</option>';
+    if (stateAreaData[state]) {
+        stateAreaData[state].forEach(area => {
+            const opt = document.createElement('option');
+            opt.value = area;
+            opt.textContent = area;
+            areaSelect.appendChild(opt);
+        });
+    }
+};
+
+function completeRegistration() {
+    const state = document.getElementById('reg-state').value.trim();
+    const area = document.getElementById('reg-area').value.trim();
+    const street = document.getElementById('reg-street').value.trim();
+    if (!state || !area || !street) {
+        document.getElementById('reg-error').innerText = "Please fill all fields.";
+        return;
+    }
+    const address = `${street}, ${area}, ${state}, Nigeria`;
+    let users = JSON.parse(localStorage.getItem('gadgetUsers') || '{}');
+    const { username, password } = window._pendingReg;
+    users[username] = password;
+    users[username + '_address'] = address;
+    localStorage.setItem('gadgetUsers', JSON.stringify(users));
+    document.getElementById('register-form-modal').style.display = 'none';
+    document.getElementById('login-error').innerText = "Registration successful! Please login.";
+    showLogin();
+}
+
+window.onload = function() {
+    if (localStorage.getItem('gadgetLoggedIn')) {
+        document.getElementById('login-modal').style.display = "none";
+        document.getElementById('main-content').style.display = "block";
+    } else {
+        document.getElementById('login-modal').style.display = "flex";
+        document.getElementById('main-content').style.display = "none";
+    }
+};
+// --- BACKEND URLS ---
+const ORDERS_SHEET_URL = "https://api.sheetbest.com/sheets/da756097-1974-49b4-bee3-34954fa429da";
+const ADMIN_SHEET_URL = "https://api.sheetbest.com/sheets/59b9bd3c-b08b-4e5f-96c5-3e8b812974c0";
+
+// --- NOTIFICATION DOT LOGIC ---
+function setNotificationDot(show) {
+    let notifBtn = document.getElementById('notification-btn');
+    let dot = notifBtn.querySelector('.notif-dot');
+    if (show) {
+        if (!dot) {
+            dot = document.createElement('span');
+            dot.className = 'notif-dot';
+            dot.style.position = 'absolute';
+            dot.style.top = '8px';
+            dot.style.right = '8px';
+            dot.style.width = '12px';
+            dot.style.height = '12px';
+            dot.style.background = '#e74c3c';
+            dot.style.borderRadius = '50%';
+            dot.style.display = 'inline-block';
+            dot.style.boxShadow = '0 0 4px #fff';
+            notifBtn.style.position = 'relative';
+            notifBtn.appendChild(dot);
+        }
+        dot.style.display = 'inline-block';
+    } else if (dot) {
+        dot.style.display = 'none';
+    }
+}
+
+// --- SHOW NOTIFICATIONS MODAL ---
+document.getElementById('notification-btn').onclick = function () {
+    loadNotificationsFromSheet();
+    setNotificationDot(false); // Remove dot when opened
+};
+
+// --- LOAD NOTIFICATIONS FROM SHEET ---
+function loadNotificationsFromSheet() {
+    const username = localStorage.getItem('gadgetLoggedIn') || 'Guest';
+    // Fetch orders notifications
+    const ordersPromise = fetch(ORDERS_SHEET_URL)
+        .then(response => response.json())
+        .then(data => Array.isArray(data) ? data : []);
+
+    // Fetch admin replies notifications (DIFFERENT SHEET)
+    const adminRepliesPromise = fetch(ADMIN_SHEET_URL)
+        .then(response => response.json())
+        .then(data => Array.isArray(data) ? data : []);
+
+    Promise.all([ordersPromise, adminRepliesPromise])
+        .then(([orderNotes, adminReplies]) => {
+            // Only show notifications for the logged-in user
+            const adminNotes = adminReplies
+                .filter(n => (n.title || n.message) && (n.user === username || n.sender === username))
+                .map(n => ({
+                    type: 'admin',
+                    title: n.title || 'Admin Reply',
+                    message: n.message,
+                    timestamp: n.timestamp,
+                    status: n.status || 'admin'
+                }));
+
+            const orderNotesMapped = orderNotes
+                .filter(n => (n.title || n.message) && (n.user === username || n.sender === username))
+                .map(n => ({
+                    type: 'order',
+                    title: n.title || 'Order',
+                    message: n.message,
+                    timestamp: n.timestamp,
+                    status: n.status || 'pending'
+                }));
+
+            // Combine and sort by time (latest first)
+            const allNotes = [...orderNotesMapped, ...adminNotes].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            let list = allNotes.length
+                ? allNotes.map(n => `
+                    <div style="margin-bottom:10px;">
+                        <b>${n.type === 'admin' ? '<span style="color:#0078d7;">' + n.title + '</span>' : n.title}</b><br>
+                        ${n.message ? n.message.replace(/\n/g, '<br>') : ''}
+                        <br>
+                        <small>${n.timestamp ? new Date(n.timestamp).toLocaleString() : ''}</small>
+                        <br>
+                        <span style="color:${n.status === 'confirmed' ? '#2ecc71' : n.status === 'rejected' ? '#e74c3c' : n.status === 'admin' ? '#0078d7' : '#888'};">
+                            Status: ${n.status || 'pending'}
+                        </span>
+                    </div>
+                `).join('')
+                : '<div style="color:#888;">No notifications yet.</div>';
+
+            document.getElementById('notification-history-list').innerHTML = list;
+            document.getElementById('notification-history-modal').style.display = 'block';
+        })
+        .catch(err => {
+            document.getElementById('notification-history-list').innerHTML = '<div style="color:#888;">Error loading notifications.</div>';
+            document.getElementById('notification-history-modal').style.display = 'block';
+            console.error(err);
+        });
+}
+
+// --- CLEAR ALL NOTIFICATIONS FUNCTION ---
+function clearNotifications() {
+    document.getElementById('notification-history-list').innerHTML = '<div style="color:#888;">No notifications yet.</div>';
+    showNotification("Notifications cleared from view. To clear from backend, clear the sheet in Google Sheets.");
+    setNotificationDot(false);
+}
+
+// --- NOTIFICATION POPUP FUNCTION ---
+function showNotification(message) {
+    let notif = document.getElementById('custom-notification');
+    if (!notif) {
+        notif = document.createElement('div');
+        notif.id = 'custom-notification';
+        notif.style.position = 'fixed';
+        notif.style.bottom = '30px';
+        notif.style.right = '30px';
+        notif.style.background = '#0078d7';
+        notif.style.color = '#fff';
+        notif.style.padding = '16px 24px';
+        notif.style.borderRadius = '8px';
+        notif.style.boxShadow = '0 2px 8px rgba(0,0,0,0.18)';
+        notif.style.fontSize = '1.1em';
+        notif.style.zIndex = '99999';
+        notif.style.display = 'none';
+        document.body.appendChild(notif);
+    }
+    notif.innerText = message;
+    notif.style.display = 'block';
+    setNotificationDot(true); // Show dot when new notification/message
+    setTimeout(() => {
+        notif.style.display = 'none';
+    }, 3000);
+}
+
+// --- POLL FOR NEW NOTIFICATIONS AND SHOW DOT ---
+function pollNotificationsDot() {
+    const username = localStorage.getItem('gadgetLoggedIn') || 'Guest';
+    fetch(ADMIN_SHEET_URL)
+        .then(res => res.json())
+        .then(data => {
+            // Check if there is any unread admin notification for this user
+            const hasNew = Array.isArray(data) && data.some(n =>
+                (n.user === username || n.sender === username) &&
+                (n.status === 'confirmed' || n.status === 'rejected')
+            );
+            setNotificationDot(hasNew);
+        });
+}
+// Start polling every 10 seconds
+setInterval(pollNotificationsDot, 10000);
+pollNotificationsDot();
+
+// --- BUY NOW LOGIC WITH ONSEND NOTIFICATION ---
+function buyNow(name, price) {
+    const username = localStorage.getItem('gadgetLoggedIn') || 'Guest';
+    const users = JSON.parse(localStorage.getItem('gadgetUsers') || '{}');
+    const userAddress = users[username + '_address'] || '';
+
+    function calculateAmount(base, method, address) {
+        let percent = method === 'pickup' ? 0.15 : (/ikeja|lagos/i.test(address) ? 0.30 : 0.40);
+        return Math.round(base + (base * percent));
+    }
+
+    let currentMethod = 'pickup';
+    let currentPayment = 'transfer';
+    // Use registered address for pickup by default
+    let currentAddress = userAddress || 'Allen Ave, Ikeja, Lagos';
+
+    let currentAmount = calculateAmount(price, currentMethod, currentAddress);
+
+    const modal = document.createElement('div');
+    modal.style = "position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;";
+    modal.innerHTML = `
+      <div style="background:#fff;padding:24px 18px;border-radius:12px;max-width:370px;box-shadow:0 4px 24px rgba(0,0,0,0.18);text-align:center;position:relative;">
+        <button onclick="this.closest('div').parentNode.remove();" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:22px;cursor:pointer;">&times;</button>
+        <h2>Buy Now: ${name}</h2>
+        <p style="color:#0078d7;font-weight:bold;">Price: #<span id="base-price">${price}</span></p>
+        <div style="margin:12px 0;">
+          <label><input type="radio" name="method" value="pickup" checked> Pickup</label>
+          <label style="margin-left:12px;"><input type="radio" name="method" value="delivery"> Delivery</label>
+        </div>
+        <div style="margin:12px 0;">
+          <label><input type="radio" name="payment" value="transfer" checked> Transfer</label>
+          <label style="margin-left:8px;"><input type="radio" name="payment" value="card"> Card</label>
+          <label style="margin-left:8px;"><input type="radio" name="payment" value="payondelivery"> Pay on Delivery</label>
+        </div>
+        <div id="pickup-map" style="margin-bottom:10px;">
+          <iframe src="https://www.google.com/maps?q=${encodeURIComponent(currentAddress)}&layer=c&output=svembed" width="320" height="150" style="border:0;border-radius:10px;"></iframe>
+          <div style="margin:8px 0;color:#555;">Pickup Location: ${currentAddress}</div>
+        </div>
+        <div id="delivery-section" style="display:none;margin-bottom:10px;">
+          <input type="text" id="delivery-address-input" placeholder="Enter delivery address" value="${userAddress}" style="width:90%;padding:8px;border-radius:5px;border:1px solid #ccc;">
+          <iframe id="delivery-map" width="320" height="150" style="border:0;border-radius:10px;margin-top:8px;"></iframe>
+          <div style="margin:8px 0;color:#555;">Delivery Area Street View</div>
+        </div>
+        <div style="margin:10px 0;">
+          <strong style="color:#0078d7;">Total Amount to Pay: #<span id="total-amount">${currentAmount}</span></strong>
+        </div>
+        <button id="confirm-order-btn" style="background:#2ecc71;color:#fff;border:none;border-radius:5px;padding:10px 18px;font-size:1em;cursor:pointer;">I Have Paid</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Show/hide delivery section based on method
+    modal.querySelectorAll('input[name="method"]').forEach(radio => {
+        radio.onchange = function() {
+            if (this.value === 'delivery') {
+                modal.querySelector('#pickup-map').style.display = 'none';
+                modal.querySelector('#delivery-section').style.display = '';
+                currentMethod = 'delivery';
+                currentAddress = modal.querySelector('#delivery-address-input').value.trim() || currentAddress;
+                // Show map for current address if not empty
+                const mapFrame = modal.querySelector('#delivery-map');
+                if (currentAddress) {
+                    mapFrame.src = `https://www.google.com/maps?q=${encodeURIComponent(currentAddress)}&output=embed`;
+                } else {
+                    mapFrame.src = "";
+                }
+            } else {
+                modal.querySelector('#pickup-map').style.display = '';
+                modal.querySelector('#delivery-section').style.display = 'none';
+                currentMethod = 'pickup';
+                currentAddress = userAddress || 'Allen Ave, Ikeja, Lagos';
+                // Update pickup map and address to registered address
+                const pickupMap = modal.querySelector('#pickup-map iframe');
+                const pickupText = modal.querySelector('#pickup-map div');
+                pickupMap.src = `https://www.google.com/maps?q=${encodeURIComponent(currentAddress)}&layer=c&output=svembed`;
+                pickupText.textContent = `Pickup Location: ${currentAddress}`;
+            }
+            // add 40% to base price for delivery, 30% for Ikeja/Lagos, 15% for pickup
+            currentAmount = calculateAmount(price, currentMethod, currentAddress);
+            modal.querySelector('#total-amount').innerText = currentAmount;
+            // Update the map to show the selected method's address
+            const mapFrame = modal.querySelector('#delivery-map');
+            if (currentMethod === 'delivery' && currentAddress) {
+                mapFrame.src = `https://www.google.com/maps?q=${encodeURIComponent(currentAddress)}&output=embed`;
+            } else {
+                mapFrame.src = "";
+            }
+        };
+    });
+
+    // Payment method selection
+    modal.querySelectorAll('input[name="payment"]').forEach(radio => {
+        radio.onchange = function() {
+            currentPayment = this.value;
+            // Show bank transfer info if selected
+            const transferInfoId = 'bank-transfer-info';
+            let info = modal.querySelector(`#${transferInfoId}`);
+            if (this.value === 'transfer') {
+                if (!info) {
+                    info = document.createElement('div');
+                    info.id = transferInfoId;
+                    info.style = "margin:10px 0 0 0;padding:10px;background:#eaf3fa;border-radius:6px;color:#222;font-size:1em;";
+                    info.innerHTML = `<b>Bank Transfer Only</b><br>
+                        Account Number: <span style="color:#0078d7;font-weight:bold;">9138154963</span><br>
+                        Bank Name: <span style="color:#0078d7;font-weight:bold;">Opay</span><br>
+                        Account Name: <span style="color:#0078d7;font-weight:bold;">Ayomide Amos</span>`;
+                    modal.querySelector('.order-details')?.after(info) ||
+                    modal.querySelector('#total-amount').parentNode.after(info);
+                } else {
+                    info.style.display = '';
+                }
+            } else if (info) {
+                info.style.display = 'none';
+            }
+        };
+    });
+    // Set default to show bank transfer info on modal open
+    setTimeout(() => {
+        const transferRadio = modal.querySelector('input[name="payment"][value="transfer"]');
+        if (transferRadio) transferRadio.checked = true;
+        transferRadio?.dispatchEvent(new Event('change'));
+    }, 0);
+
+    // Update amount and map on address change
+    modal.querySelector('#delivery-address-input').oninput = function() {
+        currentAddress = this.value.trim();
+        currentAmount = calculateAmount(price, currentMethod, currentAddress);
+        modal.querySelector('#total-amount').innerText = currentAmount;
+        // Update the map to show the entered address
+        const mapFrame = modal.querySelector('#delivery-map');
+        if (currentAddress) {
+            mapFrame.src = `https://www.google.com/maps?q=${encodeURIComponent(currentAddress)}&output=embed`;
+        } else {
+            mapFrame.src = "";
+        }
+    };
+
+    modal.querySelector('#confirm-order-btn').onclick = function() {
+        const method = modal.querySelector('input[name="method"]:checked').value;
+        const payment = modal.querySelector('input[name="payment"]:checked').value;
+        let address = method === 'delivery' ? modal.querySelector('#delivery-address-input').value.trim() : (userAddress || 'Allen Ave, Ikeja, Lagos');
+
+        if (method === 'delivery' && !address) {
+            alert('Please enter your delivery address.');
+            return;
+        }
+
+        users[username + '_address'] = address;
+        localStorage.setItem('gadgetUsers', JSON.stringify(users));
+
+        // --- SHEETBEST ORDER SUBMISSION ---
+        showNotification('Sending order...');
+        axios.post("https://api.sheetbest.com/sheets/241df24d-b61e-4584-9a0a-cde50541263b", {
+            timestamp: new Date().toISOString(),
+            sender: username,
+            title: `New Order: ${name}`,
+            message: `User: ${username}\nProduct: ${name}\nPrice: $${price}\nMethod: ${method}\nPayment: ${payment}\nAddress: ${address}\nTotal: $${currentAmount}`,
+            status: 'active'
+        })
+        .then(response => {
+            // Send notification to notification sheet for user (with full order details)
+            axios.post("https://api.sheetbest.com/sheets/da756097-1974-49b4-bee3-34954fa429da", {
+                timestamp: new Date().toISOString(),
+                user: username,
+                title: "Order Placed",
+                message: `Order Details:\nProduct: ${name}\nPrice: $${price}\nMethod: ${method}\nPayment: ${payment}\nAddress: ${address}\nTotal: $${currentAmount}\n\nYour order for ${name} has been placed and is pending admin confirmation.`,
+                status: 'pending',
+                total: currentAmount,
+                address: address,
+                product: name
+            }).then(() => {
+                showNotification('Order sent! You will see admin reaction here.');
+                modal.remove();
+            }).catch(() => {
+                showNotification('Order sent, but notification failed.');
+                modal.remove(); 
+            });
+        })
+        .catch(error => {
+            showNotification('Error sending order.');
+            modal.remove();
+        });
+    };
+}
+
+// --- CHAT LOGIC WITH TWO SHEETS (SEND & RECEIVE) ---
+const CHAT_SEND_SHEET = "https://api.sheetbest.com/sheets/0454fba2-42fd-49f5-9ec9-18e1e09c36da";
+const CHAT_RECEIVE_SHEET = "https://api.sheetbest.com/sheets/241df24d-b61e-4584-9a0a-cde50541263b";
+
+// Show chat window when button is clicked
+document.getElementById('ai-chat-btn').onclick = function() {
+    document.getElementById('ai-chat-modal').style.display = 'flex';
+    loadAdminReplies();
+    window._chatInterval = setInterval(loadAdminReplies, 2000);
+};
+
+// Hide chat and stop polling when closed
+document.querySelector('#ai-chat-modal button[onclick]').onclick = function() {
+    document.getElementById('ai-chat-modal').style.display = 'none';
+    clearInterval(window._chatInterval);
+};
+
+// Send user message to send sheet
+function sendAIMessage() {
+    const input = document.getElementById('ai-chat-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+    const chat = document.getElementById('ai-chat-messages');
+    chat.innerHTML += `<div style="text-align:right;margin-bottom:6px;"><span style="background:#0078d7;color:#fff;padding:6px 12px;border-radius:12px 12px 2px 12px;display:inline-block;">${msg}</span></div>`;
+    input.value = '';
+    chat.scrollTop = chat.scrollHeight;
+
+    let name = localStorage.getItem('gadgetLoggedIn') || 'Guest';
+    fetch(CHAT_SEND_SHEET, {
+        method: "POST",
+        body: JSON.stringify({ name, message: msg }),
+        headers: { "Content-Type": "application/json" }
+    })
+    .then(res => res.json())
+    .then(() => {
+        loadAdminReplies();
+    })
+    .catch(() => {
+        chat.innerHTML += `<div style="text-align:left;margin-bottom:6px;"><span style="background:#e60023;color:#fff;padding:6px 12px;border-radius:12px 12px 12px 2px;display:inline-block;">Failed to send message.</span></div>`;
+        chat.scrollTop = chat.scrollHeight;
+    });
+}
+
+// Load admin replies from receive sheet
+function loadAdminReplies() {
+    fetch(CHAT_RECEIVE_SHEET)
+        .then(res => res.json())
+        .then(data => {
+            const chat = document.getElementById('ai-chat-messages');
+            chat.innerHTML = '';
+            if (Array.isArray(data) && data.length) {
+                data.forEach(reply => {
+                    chat.innerHTML += `<div style="text-align:left;margin-bottom:6px;"><span style="background:#eaf3fa;color:#222;padding:6px 12px;border-radius:12px 12px 12px 2px;display:inline-block;"><strong>${reply.name || "Admin"}:</strong> ${reply.reply || reply.message || ""}</span></div>`;
+                });
+            } else {
+                chat.innerHTML = `<div style="text-align:center;color:#888;">No replies yet.</div>`;
+            }
+            chat.scrollTop = chat.scrollHeight;
+        });
+}
+
+document.getElementById('ai-chat-form').onsubmit = function(e) {
+    e.preventDefault();
+    sendAIMessage();
+};
+
+// Show map modal
+function showMapModal() {
+    if (!document.getElementById('map-modal')) {
+        const modal = document.createElement('div');
+        modal.id = 'map-modal';
+        modal.style = "position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;";
+        modal.innerHTML = `
+            <div style="background:#fff;padding:24px 18px;border-radius:12px;max-width:370px;box-shadow:0 4px 24px rgba(0,0,0,0.18);text-align:center;position:relative;">
+                <button onclick="closeMapModal()" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:22px;cursor:pointer;">&times;</button>
+                <h2 style="color:#0078d7;">Our Location</h2>
+                <iframe src="https://www.google.com/maps?q=123+Gadget+Street,+Tech+City,+Nigeria&output=embed" width="320" height="220" style="border:0;border-radius:10px;"></iframe>
+                <div style="margin:8px 0;color:#555;">123 Gadget Street, Tech City, Nigeria</div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    } else {
+        document.getElementById('map-modal').style.display = 'flex';
+    }
+}
+
+function closeMapModal() {
+    const modal = document.getElementById('map-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+// View details function
+function viewDetails(name, price, image) {
+    const detailsModal = document.createElement('div');
+    detailsModal.style = "position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;";
+    detailsModal.innerHTML = `
+        <div style="background:#fff;padding:24px 18px;border-radius:12px;max-width:370px;box-shadow:0 4px 24px rgba(0,0,0,0.18);text-align:center;position:relative;">
+            <button onclick="this.closest('div').parentNode.remove();" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:22px;cursor:pointer;">&times;</button>
+            <img src="${image}" alt="${name}" style="width:100%;border-radius:8px;margin-bottom:12px;">
+            <h2>${name}</h2>
+            <p>Price: $${price}</p>
+            <button onclick="buyNow('${name}', ${price})" style="background:#2ecc71;color:#fff;border:none;border-radius:5px;padding:10px 18px;font-size:1em;cursor:pointer;">Buy Now</button>
+        </div>
+    `;
+    document.body.appendChild(detailsModal);
+}
+
+// Search function (show all if empty, filter by name if not)
+function searchGadgets() {
+    const query = document.getElementById('search-input').value.toLowerCase();
+    const gadgets = document.querySelectorAll('.Gadget-item');
+    let found = false;
+    gadgets.forEach(gadget => {
+        const name = gadget.querySelector('h2').innerText.toLowerCase();
+        if (name.includes(query) && query !== "") {
+            gadget.style.display = '';
+            gadgets.forEach(g => {
+                if (g !== gadget) g.style.display = 'none';
+            });
+            gadget.scrollIntoView({ behavior: "smooth", block: "center" });
+            found = true;
+        } else if (query === "") {
+            gadget.style.display = '';
+        } else {
+            gadget.style.display = 'none';
+        }
+    });
+}
+
+// Listen for Enter key to reset view
+document.getElementById('search-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        this.value = '';
+        const gadgets = document.querySelectorAll('.Gadget-item');
+        gadgets.forEach(gadget => {
+            gadget.style.display = '';
+        });
+    }
+});
+
+</script>
+</body>
+</html>
+</html>

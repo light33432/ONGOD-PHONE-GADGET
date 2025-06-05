@@ -1,0 +1,10 @@
+[
+  {
+    "timestamp": "2025-05-30T04:27:38.370Z",
+    "type": "notification",
+    "sender": "ayomideoluniyi49@gmail.com",
+    "title": "New Order: Google Pixel",
+    "message": "User: ayomideoluniyi49@gmail.com\nProduct: Google Pixel\nPrice: $450\nMethod: pickup\nAddress: Allen Avenue, Ikeja, Lagos\nTotal: $518",
+    "status": "active"
+  }
+]
