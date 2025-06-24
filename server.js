@@ -100,6 +100,24 @@ app.post('/api/users', async (req, res) => {
   res.json({ success: true });
 });
 
+// --- LOGIN ENDPOINT ---
+app.post('/api/users/login', async (req, res) => {
+  const { username, password } = req.body;
+  const user = users.find(u => u.username === username);
+  if (!user) return res.status(401).json({ message: 'Invalid username or password.' });
+  const valid = await bcrypt.compare(password, user.password);
+  if (!valid) return res.status(401).json({ message: 'Invalid username or password.' });
+  // Create JWT token
+  const token = jwt.sign({ username: user.username }, SECRET, { expiresIn: '7d' });
+  res.json({
+    token,
+    username: user.username,
+    state: user.state,
+    area: user.area,
+    street: user.street
+  });
+});
+
 // Delete all users
 app.delete('/api/users', (req, res) => {
   users = [];
