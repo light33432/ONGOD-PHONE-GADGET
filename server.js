@@ -159,3 +159,13 @@ app.listen(PORT, () => {
     console.log('Public URL: https://' + process.env.RENDER_EXTERNAL_HOSTNAME);
   }
 });
+
+// --- EXTRA: Utility endpoint to add a test user quickly (for development only) ---
+app.post('/api/dev-add-user', async (req, res) => {
+  const { username, password, email } = req.body;
+  if (!username || !password || !email) return res.status(400).json({ error: 'Missing username, password, or email' });
+  if (users.find(u => u.username === username)) return res.status(409).json({ error: 'User exists' });
+  const hash = await bcrypt.hash(password, 10);
+  users.push({ username, password: hash, email });
+  res.json({ success: true, user: { username, email } });
+});
