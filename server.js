@@ -90,8 +90,18 @@ app.get('/api/users', (req, res) => {
   res.json(users);
 });
 
-// Register a new user
+// Register a new user (for /api/users)
 app.post('/api/users', async (req, res) => {
+  const { username, password, state, area, street, email } = req.body;
+  if (!username || !password) return res.status(400).json({ error: 'Missing username or password' });
+  if (users.find(u => u.username === username)) return res.status(409).json({ error: 'User exists' });
+  const hash = await bcrypt.hash(password, 10);
+  users.push({ username, password: hash, state, area, street, email });
+  res.json({ success: true });
+});
+
+// Register a new user (for /api/users/register)
+app.post('/api/users/register', async (req, res) => {
   const { username, password, state, area, street, email } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'Missing username or password' });
   if (users.find(u => u.username === username)) return res.status(409).json({ error: 'User exists' });
