@@ -26,4 +26,9 @@ let customerCareMessages = []; // {from, text, date, username}
 // ...existing code...
 
 // --- Start server ---
-app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Backend running on http://localhost:${PORT}`);
+  if (process.env.RENDER_EXTERNAL_HOSTNAME) {
+    console.log('Public URL: https://' + process.env.RENDER_EXTERNAL_HOSTNAME);
+  }
+});
