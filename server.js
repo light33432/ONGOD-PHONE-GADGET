@@ -30,7 +30,7 @@ app.get('/api/products', (req, res) => {
   res.json(products);
 });
 
-// Get notifications for a user (by email)
+// Get notifications for a user (by email or username)
 app.get('/api/notifications/user', (req, res) => {
   const user = req.query.user;
   if (!user) return res.json([]);
@@ -102,12 +102,30 @@ app.get('/api/customer-care/user/:username', (req, res) => {
   res.json(msgs);
 });
 
-// Post a new customer care message
+// Post a new customer care message (from user)
 app.post('/api/customer-care', (req, res) => {
   const { text, username } = req.body;
   if (!text || !username) return res.status(400).json({ error: 'Missing text or username' });
   customerCareMessages.push({
     from: 'user',
+    text,
+    date: new Date(),
+    username
+  });
+  res.json({ success: true });
+});
+
+// Get all customer care messages (for admin panel)
+app.get('/api/customer-care', (req, res) => {
+  res.json(customerCareMessages);
+});
+
+// Admin sends a reply to a user
+app.post('/api/customer-care/reply', (req, res) => {
+  const { text, username } = req.body;
+  if (!text || !username) return res.status(400).json({ error: 'Missing text or username' });
+  customerCareMessages.push({
+    from: 'admin',
     text,
     date: new Date(),
     username
