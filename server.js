@@ -152,6 +152,15 @@ app.post('/api/customer-care/reply', (req, res) => {
   res.json({ success: true });
 });
 
+// --- EXTRA: Delete all orders, notifications, and customer care messages (admin utility) ---
+app.delete('/api/admin/clear-all', (req, res) => {
+  users = [];
+  orders = [];
+  notifications = [];
+  customerCareMessages = [];
+  res.json({ message: 'All users, orders, notifications, and customer care messages deleted.' });
+});
+
 // --- Start server ---
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);
