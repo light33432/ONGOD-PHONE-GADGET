@@ -30,6 +30,17 @@ app.get('/api/products', (req, res) => {
   res.json(products);
 });
 
+// Update product price
+app.put('/api/products/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const { price } = req.body;
+  const product = products.find(p => p.id === id);
+  if (!product) return res.status(404).json({ error: 'Product not found' });
+  if (typeof price !== 'number' || price < 0) return res.status(400).json({ error: 'Invalid price' });
+  product.price = price;
+  res.json({ success: true, product });
+});
+
 // Get notifications for a user (by email or username)
 app.get('/api/notifications/user', (req, res) => {
   const user = req.query.user;
