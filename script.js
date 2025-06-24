@@ -96,7 +96,7 @@ async function register() {
     });
     const data = await res.json();
     if (res.ok) {
-      document.getElementById('reg-error').innerText = "Registration successful! Please login.";
+      document.getElementById('reg-error').innerText = "Registration successful! Please check your email for the verification code.";
       closeRegisterForm();
       showLogin();
     } else {

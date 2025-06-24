@@ -31,8 +31,8 @@ let pendingVerifications = {};
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.MAIL_USER || 'your_gmail@gmail.com',
-    pass: process.env.MAIL_PASS || 'your_gmail_app_password'
+    user: 'glet7563@gmail.com',
+    pass: 'yukwpidvyujgpmsv'
   }
 });
 
@@ -152,7 +152,7 @@ app.post('/api/users/register', async (req, res) => {
   // Send code to email
   try {
     await transporter.sendMail({
-      from: process.env.MAIL_USER || 'your_gmail@gmail.com',
+      from: 'glet7563@gmail.com',
       to: email,
       subject: 'ONGOD PHONE GADGET - Email Verification Code',
       html: `<h2>ONGOD PHONE GADGET</h2>
@@ -186,7 +186,7 @@ app.post('/api/users/resend-code', async (req, res) => {
 
   try {
     await transporter.sendMail({
-      from: process.env.MAIL_USER || 'your_gmail@gmail.com',
+      from: 'glet7563@gmail.com',
       to: email,
       subject: 'ONGOD PHONE GADGET - Email Verification Code (Resent)',
       html: `<h2>ONGOD PHONE GADGET</h2>
