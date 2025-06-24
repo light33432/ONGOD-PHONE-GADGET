@@ -21,7 +21,7 @@ let products = [
 ];
 let orders = [];
 let notifications = [];
-let customerCareMessages = []; // {from, text, date, username}
+let customerCareMessages = []; // {from, text, date, username, email}
 
 // --- API ROUTES ---
 
@@ -92,11 +92,11 @@ app.get('/api/users', (req, res) => {
 
 // Register a new user
 app.post('/api/users', async (req, res) => {
-  const { username, password, state, area, street } = req.body;
+  const { username, password, state, area, street, email } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'Missing username or password' });
   if (users.find(u => u.username === username)) return res.status(409).json({ error: 'User exists' });
   const hash = await bcrypt.hash(password, 10);
-  users.push({ username, password: hash, state, area, street });
+  users.push({ username, password: hash, state, area, street, email });
   res.json({ success: true });
 });
 
@@ -115,13 +115,14 @@ app.get('/api/customer-care/user/:username', (req, res) => {
 
 // Post a new customer care message (from user)
 app.post('/api/customer-care', (req, res) => {
-  const { text, username } = req.body;
-  if (!text || !username) return res.status(400).json({ error: 'Missing text or username' });
+  const { text, username, email } = req.body;
+  if (!text || !username || !email) return res.status(400).json({ error: 'Missing text, username, or email' });
   customerCareMessages.push({
     from: 'user',
     text,
     date: new Date(),
-    username
+    username,
+    email
   });
   res.json({ success: true });
 });
@@ -135,11 +136,15 @@ app.get('/api/customer-care', (req, res) => {
 app.post('/api/customer-care/reply', (req, res) => {
   const { text, username } = req.body;
   if (!text || !username) return res.status(400).json({ error: 'Missing text or username' });
+  // Find the user's email from previous messages
+  const lastMsg = customerCareMessages.slice().reverse().find(m => m.username === username && m.email);
+  const email = lastMsg ? lastMsg.email : '';
   customerCareMessages.push({
     from: 'admin',
     text,
     date: new Date(),
-    username
+    username,
+    email
   });
   res.json({ success: true });
 });
