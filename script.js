@@ -96,15 +96,54 @@ async function register() {
     });
     const data = await res.json();
     if (res.ok) {
-      document.getElementById('reg-error').innerText = "Registration successful! Please check your email for the verification code.";
-      closeRegisterForm();
-      showLogin();
+      // Show verification modal
+      document.getElementById('register-form-modal').style.display = 'none';
+      document.getElementById('verify-modal').style.display = 'flex';
+      window._pendingReg = { email, password };
+      document.getElementById('verify-error').innerText = "";
     } else {
       document.getElementById('reg-error').innerText = data.message || data.error || "Registration failed.";
     }
   } catch {
     document.getElementById('reg-error').innerText = "Registration failed.";
   }
+}
+
+// --- Verification Modal Logic ---
+async function acceptVerification() {
+  const code = document.getElementById('verify-code').value.trim();
+  const { email, password } = window._pendingReg || {};
+  if (!email || !password) {
+    document.getElementById('verify-error').innerText = "Session expired. Please register again.";
+    return;
+  }
+  if (!code) {
+    document.getElementById('verify-error').innerText = "Enter the code sent to your email.";
+    return;
+  }
+  try {
+    const res = await fetch(`${USERS_API}/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, code })
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('verify-modal').style.display = 'none';
+      showLogin();
+      document.getElementById('login-error').innerText = "Verification successful! Please log in.";
+    } else {
+      document.getElementById('verify-error').innerText = data.error || "Verification failed.";
+    }
+  } catch {
+    document.getElementById('verify-error').innerText = "Network error. Try again.";
+  }
+}
+
+function declineVerification() {
+  document.getElementById('verify-modal').style.display = 'none';
+  window._pendingReg = null;
+  showLogin();
 }
 
 // --- Login ---
@@ -132,6 +171,11 @@ async function login() {
       showNotification('Welcome back, ' + (data.username || email) + '!');
       loadProductsForUser();
       checkForNewNotifications();
+    } else if (data.error && data.error.toLowerCase().includes("verify")) {
+      // If not verified, show verification modal
+      window._pendingReg = { email, password };
+      document.getElementById('verify-modal').style.display = 'flex';
+      document.getElementById('verify-error').innerText = "Please verify your email to continue.";
     } else {
       document.getElementById('login-error').innerText = data.message || data.error || "Invalid email or password.";
     }
