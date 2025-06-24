@@ -20,7 +20,7 @@ let users = [];
 let products = [
   { id: 1, name: "iPhone 11", price: 900000, category: "phones", image: "images/iphone11.jpg" },
   { id: 2, name: "HP Pavilion", price: 650000, category: "laptops", image: "images/hplaptop.jpg" },
-  { id: 3, name: "AirPods Pro", price: 120000, category: "accessories", image: "images/airpods.png" }
+  { id: 3, name: "Mouse", price: 120000, category: "accessories", image: "images/mouse.jpg" }
 ];
 let orders = [];
 let notifications = [];
