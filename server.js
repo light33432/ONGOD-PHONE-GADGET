@@ -43,6 +43,15 @@ app.get('/api/products', (req, res) => {
   res.json(products);
 });
 
+// Add a new product (for admin/dev)
+app.post('/api/products/add', (req, res) => {
+  const { name, price, category, image } = req.body;
+  if (!name || !price || !category || !image) return res.status(400).json({ error: 'Missing product fields' });
+  const id = products.length ? products[products.length - 1].id + 1 : 1;
+  products.push({ id, name, price, category, image });
+  res.json({ success: true, product: { id, name, price, category, image } });
+});
+
 // Update product price
 app.put('/api/products/:id', (req, res) => {
   const id = parseInt(req.params.id);
@@ -79,6 +88,13 @@ app.get('/api/orders', (req, res) => {
   res.json(orders);
 });
 
+// Get all orders for a user
+app.get('/api/orders/user/:username', (req, res) => {
+  const username = req.params.username;
+  const userOrders = orders.filter(o => o.username === username);
+  res.json(userOrders);
+});
+
 // Place a new order
 app.post('/api/orders', (req, res) => {
   const { username, product, price, status, base_price, payment_method, order_type, address, image, date } = req.body;
@@ -107,6 +123,13 @@ app.get('/api/users', (req, res) => {
     const { password, ...rest } = u;
     return rest;
   }));
+});
+
+// Check if username or email exists
+app.get('/api/users/check', (req, res) => {
+  const { username, email } = req.query;
+  const exists = users.some(u => u.username === username || u.email === email);
+  res.json({ exists });
 });
 
 // --- EMAIL VERIFICATION REGISTRATION FLOW ---
@@ -146,6 +169,38 @@ app.post('/api/users/register', async (req, res) => {
     success: true,
     message: 'Verification code sent to your email. Please check your email and enter the code to complete registration.',
     phoneMessage: `Verification code sent to phone: ${phone} (code: ${code})`
+  });
+});
+
+// Resend verification code
+app.post('/api/users/resend-code', async (req, res) => {
+  const { email } = req.body;
+  const pending = pendingVerifications[email];
+  if (!pending) return res.status(400).json({ error: 'No pending registration for this email.' });
+
+  // Generate new code and update expiry
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expires = Date.now() + 15 * 60 * 1000;
+  pending.code = code;
+  pending.expires = expires;
+
+  try {
+    await transporter.sendMail({
+      from: process.env.MAIL_USER || 'your_gmail@gmail.com',
+      to: email,
+      subject: 'ONGOD PHONE GADGET - Email Verification Code (Resent)',
+      html: `<h2>ONGOD PHONE GADGET</h2>
+        <p>Your new verification code is: <b>${code}</b></p>
+        <p>Please enter this code to complete your registration.</p>
+        <p>If you did not request this, ignore this email.</p>`
+    });
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to resend verification email.' });
+  }
+
+  res.json({
+    success: true,
+    message: 'Verification code resent to your email.'
   });
 });
 
@@ -210,6 +265,13 @@ app.get('/api/users/:username/address', (req, res) => {
 app.delete('/api/users', (req, res) => {
   users = [];
   res.json({ message: 'All users deleted.' });
+});
+
+// Delete a user by username
+app.delete('/api/users/:username/delete', (req, res) => {
+  const username = req.params.username;
+  users = users.filter(u => u.username !== username);
+  res.json({ message: `User ${username} deleted.` });
 });
 
 // Get customer care messages for a user
