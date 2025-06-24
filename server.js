@@ -34,8 +34,65 @@ app.get('/api/products', (req, res) => {
 app.get('/api/notifications/user', (req, res) => {
   const user = req.query.user;
   if (!user) return res.json([]);
-  const userNotifs = notifications.filter(n => n.user === user);
+  const userNotifs = notifications.filter(n => n.user === user || n.username === user);
   res.json(userNotifs);
+});
+
+// Get all notifications (for admin panel)
+app.get('/api/notifications', (req, res) => {
+  res.json(notifications);
+});
+
+// Post a new notification
+app.post('/api/notifications', (req, res) => {
+  const notif = req.body;
+  notifications.push(notif);
+  res.json({ success: true });
+});
+
+// Get all orders
+app.get('/api/orders', (req, res) => {
+  res.json(orders);
+});
+
+// Place a new order
+app.post('/api/orders', (req, res) => {
+  const { username, product, price, status } = req.body;
+  if (!username || !product || !price) return res.status(400).json({ error: 'Missing order fields' });
+  const id = orders.length ? orders[orders.length - 1].id + 1 : 1;
+  orders.push({ id, username, product, price, status: status || 'pending' });
+  res.json({ success: true, id });
+});
+
+// Update order status
+app.put('/api/orders/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const { status } = req.body;
+  const order = orders.find(o => o.id === id);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  order.status = status;
+  res.json({ success: true, order });
+});
+
+// Get all users
+app.get('/api/users', (req, res) => {
+  res.json(users);
+});
+
+// Register a new user
+app.post('/api/users', async (req, res) => {
+  const { username, password, state, area, street } = req.body;
+  if (!username || !password) return res.status(400).json({ error: 'Missing username or password' });
+  if (users.find(u => u.username === username)) return res.status(409).json({ error: 'User exists' });
+  const hash = await bcrypt.hash(password, 10);
+  users.push({ username, password: hash, state, area, street });
+  res.json({ success: true });
+});
+
+// Delete all users
+app.delete('/api/users', (req, res) => {
+  users = [];
+  res.json({ message: 'All users deleted.' });
 });
 
 // Get customer care messages for a user
