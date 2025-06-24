@@ -8,6 +8,9 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+// Serve static images from the "images" folder
+app.use('/images', express.static('images'));
+
 // Use environment variable or fallback for SECRET and PORT
 const SECRET = process.env.SECRET || 'ongod_secret_key';
 const PORT = process.env.PORT || 3000;
@@ -126,6 +129,25 @@ app.post('/api/users/login', async (req, res) => {
     area: user.area,
     street: user.street
   });
+});
+
+// Get user info (for address and map)
+app.get('/api/users/:username', (req, res) => {
+  const username = req.params.username;
+  const user = users.find(u => u.username === username);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  // Do not send password
+  const { password, ...userInfo } = user;
+  res.json(userInfo);
+});
+
+// Get full address for a user (for map)
+app.get('/api/users/:username/address', (req, res) => {
+  const username = req.params.username;
+  const user = users.find(u => u.username === username);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  const address = `${user.street}, ${user.area}, ${user.state}, Nigeria`;
+  res.json({ address });
 });
 
 // Delete all users

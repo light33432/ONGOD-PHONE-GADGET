@@ -331,6 +331,7 @@ function showBuyModal(productName, productPrice, productImage) {
   };
 }
 
+// --- Map: Get address from backend and show map ---
 async function showUserMapInBuyModal() {
   const username = localStorage.getItem('gadgetLoggedIn');
   const token = localStorage.getItem('gadgetToken');
@@ -340,16 +341,16 @@ async function showUserMapInBuyModal() {
     return;
   }
   try {
-    const userRes = await fetch(`${USERS_API}/${encodeURIComponent(username)}`, {
+    // Fetch address from backend
+    const res = await fetch(`${USERS_API}/${encodeURIComponent(username)}/address`, {
       headers: { "Authorization": "Bearer " + token }
     });
-    if (!userRes.ok) {
+    if (!res.ok) {
       if (container) container.innerHTML = "<div style='color:#e74c3c;'>User not found. Please register or log in again.</div>";
       return;
     }
-    const user = await userRes.json();
-    if (!user || !container) return;
-    const address = `${user.street}, ${user.area}, ${user.state}, Nigeria`;
+    const data = await res.json();
+    const address = data.address;
     container.innerHTML = `
       <div style="margin:10px 0 5px 0;color:#3949ab;font-weight:700;">Delivery/Pickup Location</div>
       <div style="width:100%;height:220px;border-radius:10px;overflow:hidden;margin-bottom:10px;">
@@ -400,12 +401,13 @@ async function submitOrder(event, productName, productPrice, productImage) {
   }
   let address = '';
   try {
-    const userRes = await fetch(`${USERS_API}/${encodeURIComponent(username)}`, {
+    // Fetch address from backend for order
+    const res = await fetch(`${USERS_API}/${encodeURIComponent(username)}/address`, {
       headers: { "Authorization": "Bearer " + token }
     });
-    if (userRes.ok) {
-      const user = await userRes.json();
-      address = `${user.street}, ${user.area}, ${user.state}`;
+    if (res.ok) {
+      const data = await res.json();
+      address = data.address;
     }
   } catch {}
   document.getElementById('modal-bg').style.display = 'none';
