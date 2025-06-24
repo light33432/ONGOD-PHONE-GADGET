@@ -4,7 +4,6 @@ localStorage.removeItem('gadgetLoggedIn');
 localStorage.removeItem('gadgetLastNotif');
 
 // --- API Endpoints ---
-// Use your Render backend URL here (no leading space!)
 const API_BASE = "https://ongod-phone-gadget-1.onrender.com/api";
 const ORDERS_API = `${API_BASE}/orders`;
 const PRODUCTS_API = `${API_BASE}/products`;
@@ -77,12 +76,15 @@ function showLogin() {
 
 // --- Registration ---
 async function register() {
-  const username = document.getElementById('reg-username').value.trim();
+  const email = document.getElementById('email') ? document.getElementById('email').value.trim() : '';
+  const username = document.getElementById('reg-username') ? document.getElementById('reg-username').value.trim() : '';
+  const phone = document.getElementById('reg-phone') ? document.getElementById('reg-phone').value.trim() : '';
   const password = document.getElementById('reg-password').value;
   const state = document.getElementById('reg-state').value;
   const area = document.getElementById('reg-area').value;
   const street = document.getElementById('reg-street').value;
-  if (!username || !password || !state || !area || !street) {
+  const address = document.getElementById('reg-address') ? document.getElementById('reg-address').value.trim() : '';
+  if (!email || !username || !phone || !password || !state || !area || !street || !address) {
     document.getElementById('reg-error').innerText = "Please fill all fields.";
     return;
   }
@@ -90,7 +92,7 @@ async function register() {
     const res = await fetch(`${USERS_API}/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password, state, area, street })
+      body: JSON.stringify({ email, username, phone, password, state, area, street, address })
     });
     const data = await res.json();
     if (res.ok) {
@@ -98,7 +100,7 @@ async function register() {
       closeRegisterForm();
       showLogin();
     } else {
-      document.getElementById('reg-error').innerText = data.message || "Registration failed.";
+      document.getElementById('reg-error').innerText = data.message || data.error || "Registration failed.";
     }
   } catch {
     document.getElementById('reg-error').innerText = "Registration failed.";
@@ -107,27 +109,31 @@ async function register() {
 
 // --- Login ---
 async function login() {
-  const username = document.getElementById('login-username').value.trim();
+  const email = document.getElementById('login-email') ? document.getElementById('login-email').value.trim() : '';
   const password = document.getElementById('login-password').value;
+  if (!email || !password) {
+    document.getElementById('login-error').innerText = "Please enter your email and password.";
+    return;
+  }
   try {
     const res = await fetch(`${USERS_API}/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ email, password })
     });
     const data = await res.json();
     if (res.ok && data.token) {
       localStorage.setItem('gadgetToken', data.token);
-      localStorage.setItem('gadgetLoggedIn', username);
+      localStorage.setItem('gadgetLoggedIn', data.username || email);
       localStorage.setItem('gadgetLastNotif', '');
-      localStorage.setItem('careUsername', username); // For customer care chat
+      localStorage.setItem('careUsername', data.username || email); // For customer care chat
       document.getElementById('login-modal').style.display = "none";
       document.getElementById('main-content').style.display = "block";
-      showNotification('Welcome back, ' + username + '!');
+      showNotification('Welcome back, ' + (data.username || email) + '!');
       loadProductsForUser();
       checkForNewNotifications();
     } else {
-      document.getElementById('login-error').innerText = data.message || "Invalid username or password.";
+      document.getElementById('login-error').innerText = data.message || data.error || "Invalid email or password.";
     }
   } catch {
     document.getElementById('login-error').innerText = "Login failed.";
@@ -309,7 +315,6 @@ function showBuyModal(productName, productPrice, productImage) {
     </form>
   `;
   document.getElementById('modal-bg').style.display = 'flex';
-  // Always call this after modal is shown to ensure map loads every time
   setTimeout(showUserMapInBuyModal, 0);
   const orderTypeInputs = document.querySelectorAll('input[name="order-type"]');
   const paymentMethodContainer = document.getElementById('payment-method-container');

@@ -3,6 +3,8 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 
 const app = express();
 app.use(cors());
@@ -25,6 +27,16 @@ let products = [
 let orders = [];
 let notifications = [];
 let customerCareMessages = []; // {from, text, date, username, email}
+let pendingVerifications = {}; // { email: { code, userData, expires } }
+
+// --- EMAIL SETUP (use your real SMTP credentials in production) ---
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.MAIL_USER || 'your_gmail@gmail.com', // replace with your email
+    pass: process.env.MAIL_PASS || 'your_gmail_app_password' // replace with your app password
+  }
+});
 
 // --- API ROUTES ---
 
@@ -93,38 +105,78 @@ app.get('/api/users', (req, res) => {
   res.json(users);
 });
 
-// Register a new user (for /api/users)
-app.post('/api/users', async (req, res) => {
-  const { username, password, state, area, street, email } = req.body;
-  if (!username || !password) return res.status(400).json({ error: 'Missing username or password' });
-  if (users.find(u => u.username === username)) return res.status(409).json({ error: 'User exists' });
-  const hash = await bcrypt.hash(password, 10);
-  users.push({ username, password: hash, state, area, street, email });
-  res.json({ success: true });
+// --- EMAIL VERIFICATION REGISTRATION FLOW ---
+
+// Step 1: Register - send code to email and phone (simulate phone with response)
+app.post('/api/users/register', async (req, res) => {
+  const { username, password, state, area, street, email, phone } = req.body;
+  if (!username || !password || !email || !phone) return res.status(400).json({ error: 'Missing required fields' });
+  if (users.find(u => u.username === username || u.email === email)) return res.status(409).json({ error: 'User exists' });
+
+  // Generate code and store pending registration
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expires = Date.now() + 15 * 60 * 1000; // 15 minutes
+  pendingVerifications[email] = {
+    code,
+    userData: { username, password, state, area, street, email, phone },
+    expires
+  };
+
+  // Send code to email
+  try {
+    await transporter.sendMail({
+      from: process.env.MAIL_USER || 'your_gmail@gmail.com',
+      to: email,
+      subject: 'ONGOD PHONE GADGET - Email Verification Code',
+      html: `<h2>ONGOD PHONE GADGET</h2>
+        <p>Your verification code is: <b>${code}</b></p>
+        <p>Please enter this code to complete your registration.</p>
+        <p>If you did not request this, ignore this email.</p>`
+    });
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to send verification email.' });
+  }
+
+  // Simulate SMS by returning code in response (for real SMS, integrate with SMS API)
+  res.json({
+    success: true,
+    message: 'Verification code sent to your email. Please check your email and enter the code to complete registration.',
+    phoneMessage: `Verification code sent to phone: ${phone} (code: ${code})`
+  });
 });
 
-// Register a new user (for /api/users/register)
-app.post('/api/users/register', async (req, res) => {
-  const { username, password, state, area, street, email } = req.body;
-  if (!username || !password) return res.status(400).json({ error: 'Missing username or password' });
-  if (users.find(u => u.username === username)) return res.status(409).json({ error: 'User exists' });
+// Step 2: Verify code and complete registration
+app.post('/api/users/verify', async (req, res) => {
+  const { email, code } = req.body;
+  const pending = pendingVerifications[email];
+  if (!pending) return res.status(400).json({ error: 'No pending registration for this email.' });
+  if (pending.expires < Date.now()) {
+    delete pendingVerifications[email];
+    return res.status(400).json({ error: 'Verification code expired. Please register again.' });
+  }
+  if (pending.code !== code) return res.status(400).json({ error: 'Invalid verification code.' });
+
+  // Complete registration
+  const { username, password, state, area, street, phone } = pending.userData;
   const hash = await bcrypt.hash(password, 10);
-  users.push({ username, password: hash, state, area, street, email });
-  res.json({ success: true });
+  users.push({ username, password: hash, state, area, street, email, phone });
+  delete pendingVerifications[email];
+  res.json({ success: true, message: 'Registration complete. You can now log in.' });
 });
 
 // --- LOGIN ENDPOINT ---
 app.post('/api/users/login', async (req, res) => {
-  const { username, password } = req.body;
-  const user = users.find(u => u.username === username);
-  if (!user) return res.status(401).json({ message: 'Invalid username or password.' });
+  const { email, password } = req.body;
+  const user = users.find(u => u.email === email);
+  if (!user) return res.status(401).json({ message: 'Invalid email or password.' });
   const valid = await bcrypt.compare(password, user.password);
-  if (!valid) return res.status(401).json({ message: 'Invalid username or password.' });
+  if (!valid) return res.status(401).json({ message: 'Invalid email or password.' });
   // Create JWT token
-  const token = jwt.sign({ username: user.username }, SECRET, { expiresIn: '7d' });
+  const token = jwt.sign({ username: user.username, email: user.email }, SECRET, { expiresIn: '7d' });
   res.json({
     token,
     username: user.username,
+    email: user.email,
     state: user.state,
     area: user.area,
     street: user.street
