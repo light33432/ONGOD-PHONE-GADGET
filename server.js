@@ -117,6 +117,9 @@ app.get('/api/customer-care/user/:username', (req, res) => {
 app.post('/api/customer-care', (req, res) => {
   const { text, username, email } = req.body;
   if (!text || !username || !email) return res.status(400).json({ error: 'Missing text, username, or email' });
+  // Only allow registered users to send messages
+  const userExists = users.find(u => u.username === username);
+  if (!userExists) return res.status(403).json({ error: 'You must be registered and logged in to use customer care.' });
   customerCareMessages.push({
     from: 'user',
     text,
