@@ -1,5 +1,10 @@
+// --- Force logout for all users who have logged in before ---
+localStorage.removeItem('gadgetToken');
+localStorage.removeItem('gadgetLoggedIn');
+localStorage.removeItem('gadgetLastNotif');
+
 // --- API Endpoints ---
-const API_BASE = "https://ongod-phone-gadget-1.onrender.com/api";
+const API_BASE = "http://localhost:3000/api";
 const ORDERS_API = `${API_BASE}/orders`;
 const PRODUCTS_API = `${API_BASE}/products`;
 const USERS_API = `${API_BASE}/users`;
@@ -32,7 +37,6 @@ function showNotification(message) {
 
 function setNotificationDot(show) {
   const notifBtn = document.getElementById('notification-btn');
-  if (!notifBtn) return;
   let dot = notifBtn.querySelector('.notif-dot');
   if (show) {
     if (!dot) {
@@ -45,16 +49,6 @@ function setNotificationDot(show) {
     dot.style.display = 'none';
   }
 }
-
-// --- Force all users to login again on next visit ---
-(function forceAllUsersToLoginAgain() {
-  localStorage.removeItem('gadgetToken');
-  localStorage.removeItem('gadgetLoggedIn');
-  localStorage.removeItem('gadgetLastNotif');
-  localStorage.removeItem('gadgetUserState');
-  localStorage.removeItem('gadgetUserArea');
-  localStorage.removeItem('gadgetUserStreet');
-})();
 
 // --- Auth & Modal Logic ---
 function showRegisterForm() {
@@ -125,26 +119,11 @@ async function login() {
       localStorage.setItem('gadgetToken', data.token);
       localStorage.setItem('gadgetLoggedIn', username);
       localStorage.setItem('gadgetLastNotif', '');
-
-      // Fetch user info and save area, state, street for future orders
-      try {
-        const userRes = await fetch(`${USERS_API}/${encodeURIComponent(username)}`, {
-          headers: { "Authorization": "Bearer " + data.token }
-        });
-        if (userRes.ok) {
-          const user = await userRes.json();
-          // Save user info for future orders
-          localStorage.setItem('gadgetUserState', user.state || '');
-          localStorage.setItem('gadgetUserArea', user.area || '');
-          localStorage.setItem('gadgetUserStreet', user.street || '');
-        }
-      } catch {}
-
       document.getElementById('login-modal').style.display = "none";
       document.getElementById('main-content').style.display = "block";
       showNotification('Welcome back, ' + username + '!');
       loadProductsForUser();
-      loadOrderNotificationsOnly();
+      loadNotifications();
       checkForNewNotifications();
     } else {
       document.getElementById('login-error').innerText = data.message || "Invalid username or password.";
@@ -159,9 +138,6 @@ function forceLogoutAndRequireLogin(message) {
   localStorage.removeItem('gadgetToken');
   localStorage.removeItem('gadgetLoggedIn');
   localStorage.removeItem('gadgetLastNotif');
-  localStorage.removeItem('gadgetUserState');
-  localStorage.removeItem('gadgetUserArea');
-  localStorage.removeItem('gadgetUserStreet');
   document.getElementById('main-content').style.display = "none";
   document.getElementById('login-modal').style.display = "flex";
   if (message) document.getElementById('login-error').innerText = message;
@@ -181,7 +157,7 @@ async function checkForNewNotifications() {
   const token = localStorage.getItem('gadgetToken');
   if (!username || !token) return setNotificationDot(false);
   try {
-    const notifRes = await fetch(`${NOTIFICATIONS_API}/user?user=${encodeURIComponent(username)}`, {
+    const notifRes = await fetch(`${NOTIFICATIONS_API}?user=${encodeURIComponent(username)}`, {
       headers: { "Authorization": "Bearer " + token }
     });
     const notifs = await notifRes.json();
@@ -210,7 +186,7 @@ async function loadOrderNotificationsOnly() {
     return;
   }
   try {
-    const notifRes = await fetch(`${NOTIFICATIONS_API}/user?user=${encodeURIComponent(username)}`, {
+    const notifRes = await fetch(`${NOTIFICATIONS_API}?user=${encodeURIComponent(username)}`, {
       headers: { "Authorization": "Bearer " + token }
     });
     const notifs = await notifRes.json();
@@ -304,12 +280,6 @@ function showBuyModal(productName, productPrice, productImage) {
   let basePrice = parseFloat(productPrice);
   let deliveryTotal = Math.round(basePrice * 2);
   let pickupTotal = Math.round(basePrice * 1.3);
-
-  // Always use the address from registration (localStorage)
-  const savedState = localStorage.getItem('gadgetUserState') || '';
-  const savedArea = localStorage.getItem('gadgetUserArea') || '';
-  const savedStreet = localStorage.getItem('gadgetUserStreet') || '';
-
   modalContent.innerHTML = `
     <button class="close-btn" onclick="document.getElementById('modal-bg').style.display='none'">&times;</button>
     <img src="${escapeHtml(productImage)}" alt="${escapeHtml(productName)}">
@@ -317,13 +287,7 @@ function showBuyModal(productName, productPrice, productImage) {
     <div id="price-info">
       <p>Price: ₦<span id="price-value">${deliveryTotal}</span></p>
     </div>
-    <div id="user-address-fields" style="margin: 15px 0;">
-      <input type="text" id="order-street" placeholder="Street" value="${escapeHtml(savedStreet)}" style="width:100%;margin-bottom:6px;padding:8px;border-radius:5px;border:1px solid #ccc;" readonly>
-      <input type="text" id="order-area" placeholder="Area" value="${escapeHtml(savedArea)}" style="width:100%;margin-bottom:6px;padding:8px;border-radius:5px;border:1px solid #ccc;" readonly>
-      <input type="text" id="order-state" placeholder="State" value="${escapeHtml(savedState)}" style="width:100%;padding:8px;border-radius:5px;border:1px solid #ccc;" readonly>
-    </div>
-    <div id="auto-map-container" style="margin: 15px 0;"></div>
-    <div id="order-options">
+    <form id="orderForm">
       <div style="margin: 15px 0;">
         <label style="display: block; margin-bottom: 10px;">
           <input type="radio" name="order-type" value="delivery" checked> Delivery
@@ -339,18 +303,12 @@ function showBuyModal(productName, productPrice, productImage) {
           <option value="Bank Transfer">Bank Transfer</option>
         </select>
       </div>
-      <button id="confirm-order-btn" style="width: 100%;">Confirm Order</button>
-    </div>
+      <div id="auto-map-container" style="margin: 15px 0;"></div>
+      <button type="submit" style="width: 100%;">Confirm Order</button>
+    </form>
   `;
   document.getElementById('modal-bg').style.display = 'flex';
   showUserMapInBuyModal();
-
-  // Hide form, use only button for order
-  document.getElementById('confirm-order-btn').onclick = function(event) {
-    submitOrder(event, productName, productPrice, productImage);
-  };
-
-  // Handle order type and payment method UI
   const orderTypeInputs = document.querySelectorAll('input[name="order-type"]');
   const paymentMethodContainer = document.getElementById('payment-method-container');
   const priceValue = document.getElementById('price-value');
@@ -366,39 +324,53 @@ function showBuyModal(productName, productPrice, productImage) {
       }
     });
   });
+  document.getElementById('orderForm').onsubmit = function(event) {
+    submitOrder(event, productName, productPrice, productImage);
+  };
 }
 
 async function showUserMapInBuyModal() {
-  // Always use the address from registration (localStorage)
-  const street = localStorage.getItem('gadgetUserStreet') || '';
-  const area = localStorage.getItem('gadgetUserArea') || '';
-  const state = localStorage.getItem('gadgetUserState') || '';
+  const username = localStorage.getItem('gadgetLoggedIn');
+  const token = localStorage.getItem('gadgetToken');
   const container = document.getElementById('auto-map-container');
-  if (!street && !area && !state) {
-    if (container) container.innerHTML = "<div style='color:#e74c3c;'>No address found. Please log in again.</div>";
+  if (!username || !token) {
+    if (container) container.innerHTML = "<div style='color:#e74c3c;'>Please log in to see your delivery location.</div>";
     return;
   }
-  const address = `${street}, ${area}, ${state}, Nigeria`;
-  container.innerHTML = `
-    <div style="margin:10px 0 5px 0;color:#3949ab;font-weight:700;">Delivery/Pickup Location</div>
-    <div style="width:100%;height:220px;border-radius:10px;overflow:hidden;margin-bottom:10px;">
-      <iframe
-        width="100%"
-        height="100%"
-        style="border:0"
-        loading="lazy"
-        allowfullscreen
-        referrerpolicy="no-referrer-when-downgrade"
-        src="https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed">
-      </iframe>
-    </div>
-    <div style="color:#3949ab;font-weight:700;">${address}</div>
-  `;
+  try {
+    const userRes = await fetch(`${USERS_API}/${encodeURIComponent(username)}`, {
+      headers: { "Authorization": "Bearer " + token }
+    });
+    if (!userRes.ok) {
+      if (container) container.innerHTML = "<div style='color:#e74c3c;'>User not found. Please register or log in again.</div>";
+      return;
+    }
+    const user = await userRes.json();
+    if (!user || !container) return;
+    const address = `${user.street}, ${user.area}, ${user.state}, Nigeria`;
+    container.innerHTML = `
+      <div style="margin:10px 0 5px 0;color:#3949ab;font-weight:700;">Delivery/Pickup Location</div>
+      <div style="width:100%;height:220px;border-radius:10px;overflow:hidden;margin-bottom:10px;">
+        <iframe
+          width="100%"
+          height="100%"
+          style="border:0"
+          loading="lazy"
+          allowfullscreen
+          referrerpolicy="no-referrer-when-downgrade"
+          src="https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed">
+        </iframe>
+      </div>
+      <div style="color:#3949ab;font-weight:700;">${address}</div>
+    `;
+  } catch {
+    if (container) container.innerHTML = "<div style='color:#e74c3c;'>Could not load user info.</div>";
+  }
 }
 
 // --- Order Submission ---
 async function submitOrder(event, productName, productPrice, productImage) {
-  event.preventDefault?.();
+  event.preventDefault();
   const username = localStorage.getItem('gadgetLoggedIn');
   const token = localStorage.getItem('gadgetToken');
   if (!username || !token) {
@@ -424,17 +396,16 @@ async function submitOrder(event, productName, productPrice, productImage) {
     paymentMethod = selectedMethod;
     if (selectedMethod === "Bank Transfer") showBankDetails = true;
   }
-
-  // Always use the address from registration (localStorage)
-  const street = localStorage.getItem('gadgetUserStreet') || '';
-  const area = localStorage.getItem('gadgetUserArea') || '';
-  const state = localStorage.getItem('gadgetUserState') || '';
-  if (!street || !area || !state) {
-    alert('No address found. Please log in again.');
-    return;
-  }
-  const address = `${street}, ${area}, ${state}`;
-
+  let address = '';
+  try {
+    const userRes = await fetch(`${USERS_API}/${encodeURIComponent(username)}`, {
+      headers: { "Authorization": "Bearer " + token }
+    });
+    if (userRes.ok) {
+      const user = await userRes.json();
+      address = `${user.street}, ${user.area}, ${user.state}`;
+    }
+  } catch {}
   document.getElementById('modal-bg').style.display = 'none';
   showNotification('Order placed successfully!');
   setNotificationDot(true);
@@ -502,4 +473,5 @@ document.addEventListener('DOMContentLoaded', function() {
       checkForNewNotifications();
     }
   }, 60000);
+  if (loggedIn) loadProductsForUser();
 });
