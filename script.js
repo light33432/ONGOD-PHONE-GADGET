@@ -120,6 +120,7 @@ async function login() {
       localStorage.setItem('gadgetToken', data.token);
       localStorage.setItem('gadgetLoggedIn', username);
       localStorage.setItem('gadgetLastNotif', '');
+      localStorage.setItem('careUsername', username); // For customer care chat
       document.getElementById('login-modal').style.display = "none";
       document.getElementById('main-content').style.display = "block";
       showNotification('Welcome back, ' + username + '!');
@@ -308,7 +309,8 @@ function showBuyModal(productName, productPrice, productImage) {
     </form>
   `;
   document.getElementById('modal-bg').style.display = 'flex';
-  showUserMapInBuyModal();
+  // Always call this after modal is shown to ensure map loads every time
+  setTimeout(showUserMapInBuyModal, 0);
   const orderTypeInputs = document.querySelectorAll('input[name="order-type"]');
   const paymentMethodContainer = document.getElementById('payment-method-container');
   const priceValue = document.getElementById('price-value');
