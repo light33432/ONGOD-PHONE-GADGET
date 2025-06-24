@@ -318,7 +318,6 @@
       margin: 0 4px;
       text-decoration: underline;
     }
-    /* Add any additional CSS here if needed */
   </style>
 </head>
 <body>
@@ -326,7 +325,7 @@
   <div id="login-modal">
     <div id="login-box">
       <h2 id="login-title">Login</h2>
-      <input type="text" id="login-username" placeholder="Username" autocomplete="off"><br>
+      <input type="text" id="login-email" placeholder="Email" autocomplete="off"><br>
       <input type="password" id="login-password" placeholder="Password"><br>
       <button id="login-btn" onclick="login()">Login</button>
       <button id="register-btn" onclick="showRegisterForm()" style="display:none;">Register</button>
@@ -340,15 +339,18 @@
     <div id="register-form-modal">
       <div>
         <h2 style="color:#3949ab;">Register</h2>
-        <input type="text" id="email" placeholder="email" required>
-        <input type="password" id="reg-password" placeholder="Password">
+        <input type="text" id="email" placeholder="Email" required>
+        <input type="text" id="reg-phone" placeholder="Phone Number" required>
+        <input type="text" id="reg-username" placeholder="Username" required>
+        <input type="password" id="reg-password" placeholder="Password" required>
         <select id="reg-state" onchange="updateAreaOptions()" required>
           <option value="">Select State</option>
         </select>
         <select id="reg-area" required>
           <option value="">Select Area</option>
         </select>
-        <input type="text" id="reg-street" placeholder="Street">
+        <input type="text" id="reg-street" placeholder="Street" required>
+        <input type="text" id="reg-address" placeholder="Full Address" required>
         <button onclick="register()">Register</button>
         <button onclick="closeRegisterForm()">Cancel</button>
         <div id="reg-error" style="color:#e74c3c;margin-top:10px;"></div>

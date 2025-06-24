@@ -4,7 +4,6 @@ const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
-const crypto = require('crypto');
 
 const app = express();
 app.use(cors());
@@ -13,7 +12,6 @@ app.use(bodyParser.json());
 // Serve static images from the "images" folder
 app.use('/images', express.static('images'));
 
-// Use environment variable or fallback for SECRET and PORT
 const SECRET = process.env.SECRET || 'ongod_secret_key';
 const PORT = process.env.PORT || 3000;
 
@@ -26,15 +24,15 @@ let products = [
 ];
 let orders = [];
 let notifications = [];
-let customerCareMessages = []; // {from, text, date, username, email}
-let pendingVerifications = {}; // { email: { code, userData, expires } }
+let customerCareMessages = [];
+let pendingVerifications = {};
 
 // --- EMAIL SETUP (use your real SMTP credentials in production) ---
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.MAIL_USER || 'your_gmail@gmail.com', // replace with your email
-    pass: process.env.MAIL_PASS || 'your_gmail_app_password' // replace with your app password
+    user: process.env.MAIL_USER || 'your_gmail@gmail.com',
+    pass: process.env.MAIL_PASS || 'your_gmail_app_password'
   }
 });
 
@@ -56,16 +54,16 @@ app.put('/api/products/:id', (req, res) => {
   res.json({ success: true, product });
 });
 
-// Get notifications for a user (by email or username)
-app.get('/api/notifications/user', (req, res) => {
-  const user = req.query.user;
-  if (!user) return res.json([]);
-  const userNotifs = notifications.filter(n => n.user === user || n.username === user);
-  res.json(userNotifs);
-});
-
-// Get all notifications (for admin panel)
+// Get all notifications (for admin panel and user)
 app.get('/api/notifications', (req, res) => {
+  const user = req.query.user;
+  if (user) {
+    // Return only notifications for this user (by username or email)
+    const userNotifs = notifications.filter(n =>
+      n.username === user || n.user === user || n.email === user
+    );
+    return res.json(userNotifs);
+  }
   res.json(notifications);
 });
 
@@ -83,10 +81,13 @@ app.get('/api/orders', (req, res) => {
 
 // Place a new order
 app.post('/api/orders', (req, res) => {
-  const { username, product, price, status } = req.body;
+  const { username, product, price, status, base_price, payment_method, order_type, address, image, date } = req.body;
   if (!username || !product || !price) return res.status(400).json({ error: 'Missing order fields' });
   const id = orders.length ? orders[orders.length - 1].id + 1 : 1;
-  orders.push({ id, username, product, price, status: status || 'pending' });
+  orders.push({
+    id, username, product, price, status: status || 'pending',
+    base_price, payment_method, order_type, address, image, date
+  });
   res.json({ success: true, id });
 });
 
@@ -102,14 +103,17 @@ app.put('/api/orders/:id', (req, res) => {
 
 // Get all users
 app.get('/api/users', (req, res) => {
-  res.json(users);
+  res.json(users.map(u => {
+    const { password, ...rest } = u;
+    return rest;
+  }));
 });
 
 // --- EMAIL VERIFICATION REGISTRATION FLOW ---
 
 // Step 1: Register - send code to email and phone (simulate phone with response)
 app.post('/api/users/register', async (req, res) => {
-  const { username, password, state, area, street, email, phone } = req.body;
+  const { username, password, state, area, street, email, phone, address } = req.body;
   if (!username || !password || !email || !phone) return res.status(400).json({ error: 'Missing required fields' });
   if (users.find(u => u.username === username || u.email === email)) return res.status(409).json({ error: 'User exists' });
 
@@ -118,7 +122,7 @@ app.post('/api/users/register', async (req, res) => {
   const expires = Date.now() + 15 * 60 * 1000; // 15 minutes
   pendingVerifications[email] = {
     code,
-    userData: { username, password, state, area, street, email, phone },
+    userData: { username, password, state, area, street, email, phone, address },
     expires
   };
 
@@ -157,9 +161,9 @@ app.post('/api/users/verify', async (req, res) => {
   if (pending.code !== code) return res.status(400).json({ error: 'Invalid verification code.' });
 
   // Complete registration
-  const { username, password, state, area, street, phone } = pending.userData;
+  const { username, password, state, area, street, phone, address } = pending.userData;
   const hash = await bcrypt.hash(password, 10);
-  users.push({ username, password: hash, state, area, street, email, phone });
+  users.push({ username, password: hash, state, area, street, email, phone, address });
   delete pendingVerifications[email];
   res.json({ success: true, message: 'Registration complete. You can now log in.' });
 });
@@ -188,7 +192,6 @@ app.get('/api/users/:username', (req, res) => {
   const username = req.params.username;
   const user = users.find(u => u.username === username);
   if (!user) return res.status(404).json({ error: 'User not found' });
-  // Do not send password
   const { password, ...userInfo } = user;
   res.json(userInfo);
 });
@@ -198,7 +201,8 @@ app.get('/api/users/:username/address', (req, res) => {
   const username = req.params.username;
   const user = users.find(u => u.username === username);
   if (!user) return res.status(404).json({ error: 'User not found' });
-  const address = `${user.street}, ${user.area}, ${user.state}, Nigeria`;
+  // Use address if present, else build from street/area/state
+  const address = user.address || `${user.street}, ${user.area}, ${user.state}, Nigeria`;
   res.json({ address });
 });
 
@@ -219,7 +223,6 @@ app.get('/api/customer-care/user/:username', (req, res) => {
 app.post('/api/customer-care', (req, res) => {
   const { text, username, email } = req.body;
   if (!text || !username || !email) return res.status(400).json({ error: 'Missing text, username, or email' });
-  // Only allow registered users to send messages
   const userExists = users.find(u => u.username === username);
   if (!userExists) return res.status(403).json({ error: 'You must be registered and logged in to use customer care.' });
   customerCareMessages.push({
@@ -241,7 +244,6 @@ app.get('/api/customer-care', (req, res) => {
 app.post('/api/customer-care/reply', (req, res) => {
   const { text, username } = req.body;
   if (!text || !username) return res.status(400).json({ error: 'Missing text or username' });
-  // Find the user's email from previous messages
   const lastMsg = customerCareMessages.slice().reverse().find(m => m.username === username && m.email);
   const email = lastMsg ? lastMsg.email : '';
   customerCareMessages.push({
