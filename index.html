@@ -341,14 +341,12 @@
         <h2 style="color:#3949ab;">Register</h2>
         <input type="text" id="reg-username" placeholder="Username">
         <input type="password" id="reg-password" placeholder="Password">
-        <select id="reg-state">
+        <select id="reg-state" onchange="updateAreaOptions()" required>
           <option value="">Select State</option>
-          <option>Lagos</option>
-          <option>Ogun</option>
-          <option>Oyo</option>
-          <option>Abuja</option>
         </select>
-        <input type="text" id="reg-area" placeholder="Area">
+        <select id="reg-area" required>
+          <option value="">Select Area</option>
+        </select>
         <input type="text" id="reg-street" placeholder="Street">
         <button onclick="register()">Register</button>
         <button onclick="closeRegisterForm()">Cancel</button>
@@ -430,14 +428,45 @@
   </div>
 
   <script>
+  // Nigeria states and areas for registration
+  const NIGERIA_STATES_AND_AREAS = {
+    "Lagos": ["Ikeja", "Surulere", "Lekki", "Yaba", "Victoria Island"],
+    "Ogun": ["Abeokuta", "Ijebu Ode", "Sagamu", "Ota"],
+    "Oyo": ["Ibadan North", "Ibadan South-West", "Ogbomosho"],
+    "Abuja": ["Garki", "Wuse", "Maitama", "Asokoro"]
+    // Add more states/areas as needed
+  };
+
+  function populateStates() {
+    const stateSelect = document.getElementById('reg-state');
+    stateSelect.innerHTML = '<option value="">Select State</option>';
+    Object.keys(NIGERIA_STATES_AND_AREAS).forEach(state => {
+      stateSelect.innerHTML += `<option value="${state}">${state}</option>`;
+    });
+  }
+
+  function updateAreaOptions() {
+    const state = document.getElementById('reg-state').value;
+    const areaSelect = document.getElementById('reg-area');
+    areaSelect.innerHTML = '<option value="">Select Area</option>';
+    if (NIGERIA_STATES_AND_AREAS[state]) {
+      NIGERIA_STATES_AND_AREAS[state].forEach(area => {
+        areaSelect.innerHTML += `<option value="${area}">${area}</option>`;
+      });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    populateStates();
+    // If you have other DOMContentLoaded logic in script.js, it will still run
+  });
+
+  // --- Customer Care Chat Logic (unchanged) ---
   const CARE_API = "https://ongod-phone-gadget-1.onrender.com/api/customer-care";
   const CARE_USER_API = "https://ongod-phone-gadget-1.onrender.com/api/customer-care/user/";
 
-  // Always use the real logged-in username
-  // Set window.currentUsername when user logs in!
   let careUsername = window.currentUsername || localStorage.getItem('careUsername') || '';
 
-  // If not logged in, block chat usage
   if (!careUsername) {
     alert("You must be logged in to use customer care.");
     throw new Error("No username found. Please log in.");
@@ -495,6 +524,6 @@
       loadCareMessages();
     }
   }, 5000);
-</script>
+  </script>
 </body>
 </html>

@@ -4,7 +4,8 @@ localStorage.removeItem('gadgetLoggedIn');
 localStorage.removeItem('gadgetLastNotif');
 
 // --- API Endpoints ---
-const API_BASE = "http://localhost:3000/api";
+// Use your Render backend URL here (no leading space!)
+const API_BASE = "https://ongod-phone-gadget-1.onrender.com/api";
 const ORDERS_API = `${API_BASE}/orders`;
 const PRODUCTS_API = `${API_BASE}/products`;
 const USERS_API = `${API_BASE}/users`;
@@ -123,7 +124,6 @@ async function login() {
       document.getElementById('main-content').style.display = "block";
       showNotification('Welcome back, ' + username + '!');
       loadProductsForUser();
-      loadNotifications();
       checkForNewNotifications();
     } else {
       document.getElementById('login-error').innerText = data.message || "Invalid username or password.";
