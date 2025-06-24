@@ -23,7 +23,40 @@ let orders = [];
 let notifications = [];
 let customerCareMessages = []; // {from, text, date, username}
 
-// ...existing code...
+// --- API ROUTES ---
+
+// Get all products
+app.get('/api/products', (req, res) => {
+  res.json(products);
+});
+
+// Get notifications for a user (by email)
+app.get('/api/notifications/user', (req, res) => {
+  const user = req.query.user;
+  if (!user) return res.json([]);
+  const userNotifs = notifications.filter(n => n.user === user);
+  res.json(userNotifs);
+});
+
+// Get customer care messages for a user
+app.get('/api/customer-care/user/:username', (req, res) => {
+  const username = req.params.username;
+  const msgs = customerCareMessages.filter(m => m.username === username);
+  res.json(msgs);
+});
+
+// Post a new customer care message
+app.post('/api/customer-care', (req, res) => {
+  const { text, username } = req.body;
+  if (!text || !username) return res.status(400).json({ error: 'Missing text or username' });
+  customerCareMessages.push({
+    from: 'user',
+    text,
+    date: new Date(),
+    username
+  });
+  res.json({ success: true });
+});
 
 // --- Start server ---
 app.listen(PORT, () => {
