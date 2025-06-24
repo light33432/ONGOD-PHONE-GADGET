@@ -161,6 +161,7 @@ app.post('/api/users/register', async (req, res) => {
         <p>If you did not request this, ignore this email.</p>`
     });
   } catch (e) {
+    console.error('Email send error:', e); // Log the error for debugging
     return res.status(500).json({ error: 'Failed to send verification email.' });
   }
 
@@ -195,6 +196,7 @@ app.post('/api/users/resend-code', async (req, res) => {
         <p>If you did not request this, ignore this email.</p>`
     });
   } catch (e) {
+    console.error('Resend email error:', e); // Log the error for debugging
     return res.status(500).json({ error: 'Failed to resend verification email.' });
   }
 
