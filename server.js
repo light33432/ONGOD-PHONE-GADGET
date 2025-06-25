@@ -2,7 +2,6 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const multer = require('multer');
@@ -12,10 +11,12 @@ const fs = require('fs');
 
 const app = express();
 
-// --- CORS: Allow local frontend and your Render backend domain ---
+// --- CORS: Allow local frontend and Render backend domain ---
 const allowedOrigins = [
   'http://localhost:3000',
   'http://127.0.0.1:5501',
+  'http://localhost:5500',
+  'http://127.0.0.1:5500',
   'https://ongod-phone-gadget-1.onrender.com'
 ];
 app.use(cors({
@@ -28,7 +29,7 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(bodyParser.json());
+app.use(express.json());
 
 // Ensure images directory exists
 const imagesDir = path.join(__dirname, 'images');
@@ -77,12 +78,17 @@ app.post('/api/products/upload-image', upload.single('image'), (req, res) => {
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS
+    user: process.env.GMAIL_USER || 'laptopgadgetsphonegadgets@gmail.com',
+    pass: process.env.GMAIL_PASS || 'myzrajbrityhvzlbc'
   }
 });
 
 // --- API ROUTES ---
+
+// Welcome route
+app.get('/', (req, res) => {
+  res.send('ONGOD PHONE GADGET API is running.');
+});
 
 // Get all products (with search)
 app.get('/api/products', (req, res) => {
@@ -101,7 +107,7 @@ app.get('/api/products', (req, res) => {
 app.post('/api/products/add', (req, res) => {
   const { name, price, category, image } = req.body;
   if (!name || !price || !category || !image) return res.status(400).json({ error: 'Missing product fields' });
-  const id = products.length ? products[products.length - 1].id + 1 : 1;
+  const id = Date.now();
   products.push({ id, name, price, category, image });
   res.json({ success: true, product: { id, name, price, category, image } });
 });
@@ -152,7 +158,7 @@ app.get('/api/orders/user/:username', (req, res) => {
 app.post('/api/orders', (req, res) => {
   const { username, product, price, status, base_price, payment_method, order_type, address, image, date } = req.body;
   if (!username || !product || !price) return res.status(400).json({ error: 'Missing order fields' });
-  const id = orders.length ? orders[orders.length - 1].id + 1 : 1;
+  const id = Date.now();
   orders.push({
     id, username, product, price, status: status || 'pending',
     base_price, payment_method, order_type, address, image, date
@@ -197,7 +203,7 @@ app.post('/api/users/register', async (req, res) => {
 
   try {
     await transporter.sendMail({
-      from: `"ONGOD Gadget" <${process.env.GMAIL_USER}>`,
+      from: `"ONGOD Gadget" <${process.env.GMAIL_USER || 'your_gmail@gmail.com'}>`,
       to: email,
       subject: 'ONGOD Gadget Email Verification',
       text: `Your verification code is: ${verificationCode}`
