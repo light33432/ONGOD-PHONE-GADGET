@@ -109,6 +109,42 @@
       background: #1a237e;
       box-shadow: 0 4px 16px rgba(26,35,126,0.18);
     }
+    /* --- Image Upload Form --- */
+    #image-upload-form {
+      max-width: 400px;
+      margin: 30px auto 0 auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(26,35,126,0.08);
+      padding: 18px 20px 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.05em;
+      border: 1.5px solid #e0e7ff;
+    }
+    #image-upload-form input[type="file"] {
+      flex: 1;
+      font-size: 1em;
+    }
+    #image-upload-form button {
+      background: #3949ab;
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 8px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #image-upload-form button:hover {
+      background: #1a237e;
+    }
+    #upload-result {
+      font-size: 0.98em;
+      color: #3949ab;
+      margin-left: 8px;
+    }
     main {
       max-width: 1200px;
       margin: 38px auto;
@@ -262,12 +298,14 @@
     @media (max-width: 900px) {
       .header-content, main { padding: 0 10px; }
       .Gadget-list { grid-template-columns: 1fr 1fr; }
+      #image-upload-form { max-width: 98vw; }
     }
     @media (max-width: 600px) {
       .header-title { font-size: 1.2rem; }
       .Gadget-list { grid-template-columns: 1fr; }
       .header-content { padding: 0 4px; }
       main { padding: 0 4px; }
+      #image-upload-form { flex-direction: column; gap: 8px; }
     }
     #register-form-modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(26,35,126,0.18); align-items:center; justify-content:center; z-index:10001; }
     #register-form-modal > div { background:#fff; border-radius:12px; padding:32px 24px; box-shadow:0 2px 16px rgba(26,35,126,0.13); }
@@ -364,7 +402,6 @@
       color: #fff;
     }
   </style>
-
 </head>
 <body>
   <!-- Login/Register Modal -->
@@ -435,6 +472,13 @@
         </div>
       </div>
     </div>
+    <!-- Image Upload Form (Admin/Dev) -->
+    <form id="image-upload-form" enctype="multipart/form-data">
+      <label><b>Upload Product Image:</b></label>
+      <input type="file" id="product-image-file" name="image" accept="image/*" required>
+      <button type="submit">Upload</button>
+      <span id="upload-result"></span>
+    </form>
     <section class="search-bar">
       <input type="text" id="search-input" placeholder="Search for gadgets...">
       <button id="search-btn" onclick="searchGadgets()">Search</button>
@@ -496,6 +540,35 @@
       <button type="submit" style="background:#2ecc71;color:#fff;border:none;border-radius:6px;padding:8px 14px;">Send</button>
     </form>
   </div>
+  <script>
+    // Image Upload Form logic
+    document.getElementById('image-upload-form').onsubmit = async function(e) {
+      e.preventDefault();
+      const fileInput = document.getElementById('product-image-file');
+      const resultSpan = document.getElementById('upload-result');
+      if (!fileInput.files.length) {
+        resultSpan.textContent = "Please select an image.";
+        return;
+      }
+      const formData = new FormData();
+      formData.append('image', fileInput.files[0]);
+      resultSpan.textContent = "Uploading...";
+      try {
+        const res = await fetch('https://ongod-phone-gadget-1.onrender.com/api/products/upload-image', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          resultSpan.textContent = `Uploaded! Use: ${data.filename}`;
+        } else {
+          resultSpan.textContent = data.error || "Upload failed.";
+        }
+      } catch {
+        resultSpan.textContent = "Upload failed (network error).";
+      }
+    };
+  </script>
   <script>
     // Show chat modal when button is clicked
     document.getElementById('care-chat-btn').onclick = function() {
