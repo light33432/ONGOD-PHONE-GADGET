@@ -13,22 +13,15 @@ const app = express();
 
 // --- CORS: Allow local frontend and your Render backend domain ---
 const allowedOrigins = [
-  'http://localhost:3000', // local frontend (React, etc.)
-  'http://127.0.0.1:5501', // VS Code Live Server
-  'https://ongod-phone-gadget-1.onrender.com' // your Render backend domain
-  // Add your frontend production domain here if you deploy frontend elsewhere
+  'http://localhost:3000',
+  'http://127.0.0.1:5501',
+  'https://ongod-phone-gadget-1.onrender.com'
 ];
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    // Also allow if origin matches without trailing slash
-    if (allowedOrigins.includes(origin.replace(/\/$/, ''))) {
-      return callback(null, true);
-    }
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (allowedOrigins.includes(origin.replace(/\/$/, ''))) return callback(null, true);
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true
@@ -49,7 +42,6 @@ let products = [
   { id: 2, name: "HP Pavilion", price: 650000, category: "laptops", image: "hplaptop.jpg" },
   { id: 3, name: "Mouse", price: 120000, category: "accessories", image: "mouse.jpg" }
 ];
-
 let orders = [];
 let notifications = [];
 let customerCareMessages = [];
@@ -65,7 +57,6 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// Upload a product image (admin/dev)
 app.post('/api/products/upload-image', upload.single('image'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No image uploaded' });
   res.json({
@@ -86,7 +77,7 @@ const transporter = nodemailer.createTransport({
 
 // --- API ROUTES ---
 
-// Get all products
+// Get all products (with search)
 app.get('/api/products', (req, res) => {
   const search = (req.query.search || '').toLowerCase();
   if (search) {
@@ -99,7 +90,7 @@ app.get('/api/products', (req, res) => {
   res.json(products);
 });
 
-// Add a new product (for admin/dev)
+// Add a new product (admin/dev)
 app.post('/api/products/add', (req, res) => {
   const { name, price, category, image } = req.body;
   if (!name || !price || !category || !image) return res.status(400).json({ error: 'Missing product fields' });
@@ -198,7 +189,6 @@ app.post('/api/users/register', async (req, res) => {
   users.push({ username, password: hash, state, area, street, email, phone, address, verified: false, verificationCode });
 
   try {
-    // Remove the next block to disable email sending for testing
     await transporter.sendMail({
       from: `"ONGOD Gadget" <${process.env.GMAIL_USER}>`,
       to: email,
@@ -327,23 +317,9 @@ app.delete('/api/admin/clear-all', (req, res) => {
   res.json({ message: 'All users, orders, notifications, and customer care messages deleted.' });
 });
 
-// --- Start server ---
-// Listen on all interfaces for public access on Render
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Backend running on http://0.0.0.0:${PORT} (public on Render)`);
-  if (process.env.RENDER_EXTERNAL_HOSTNAME) {
-    console.log('Public URL: https://' + process.env.RENDER_EXTERNAL_HOSTNAME);
-  }
-});
-
-// --- EXTRA: Utility endpoint to add a test user quickly (for development only) ---
-app.post('/api/dev-add-user', async (req, res) => {
-  const { username, password, email } = req.body;
-  if (!username || !password || !email) return res.status(400).json({ error: 'Missing username, password, or email' });
-  if (users.find(u => u.username === username)) return res.status(409).json({ error: 'User exists' });
-  const hash = await bcrypt.hash(password, 10);
-  users.push({ username, password: hash, email, verified: true });
-  res.json({ success: true, user: { username, email } });
+// --- Health check endpoint for Render or uptime monitoring ---
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', time: new Date() });
 });
 
 // --- 404 Handler for unknown routes ---
@@ -357,7 +333,10 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// --- ADDITIONAL: Health check endpoint for Render or uptime monitoring ---
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', time: new Date() });
+// --- Start server ---
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Backend running on http://0.0.0.0:${PORT} (public on Render)`);
+  if (process.env.RENDER_EXTERNAL_HOSTNAME) {
+    console.log('Public URL: https://' + process.env.RENDER_EXTERNAL_HOSTNAME);
+  }
 });
