@@ -8,6 +8,7 @@ const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const path = require('path');
 const nodemailer = require('nodemailer');
+const fs = require('fs');
 
 const app = express();
 
@@ -29,8 +30,14 @@ app.use(cors({
 
 app.use(bodyParser.json());
 
+// Ensure images directory exists
+const imagesDir = path.join(__dirname, 'images');
+if (!fs.existsSync(imagesDir)) {
+  fs.mkdirSync(imagesDir);
+}
+
 // Serve static images from the "images" folder
-app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use('/images', express.static(imagesDir));
 
 const SECRET = process.env.SECRET || 'ongod_secret_key';
 const PORT = process.env.PORT || 3000;
@@ -49,7 +56,7 @@ let customerCareMessages = [];
 // --- IMAGE UPLOAD ENDPOINT (ADMIN/DEV) ---
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, 'images'));
+    cb(null, imagesDir);
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + '-' + file.originalname.replace(/\s+/g, '_'));
