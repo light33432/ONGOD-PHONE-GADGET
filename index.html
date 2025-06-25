@@ -6,9 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
- 
   <style>
-   body {
+    body {
       font-family: 'Inter', Arial, sans-serif;
       background: linear-gradient(135deg, #e0e7ff 0%, #f7f9fb 100%);
       margin: 0;
@@ -108,42 +107,6 @@
     .search-bar button:hover {
       background: #1a237e;
       box-shadow: 0 4px 16px rgba(26,35,126,0.18);
-    }
-    /* --- Image Upload Form --- */
-    #image-upload-form {
-      max-width: 400px;
-      margin: 30px auto 0 auto;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(26,35,126,0.08);
-      padding: 18px 20px 10px 20px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 1.05em;
-      border: 1.5px solid #e0e7ff;
-    }
-    #image-upload-form input[type="file"] {
-      flex: 1;
-      font-size: 1em;
-    }
-    #image-upload-form button {
-      background: #3949ab;
-      color: #fff;
-      border: none;
-      border-radius: 7px;
-      padding: 8px 16px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    #image-upload-form button:hover {
-      background: #1a237e;
-    }
-    #upload-result {
-      font-size: 0.98em;
-      color: #3949ab;
-      margin-left: 8px;
     }
     main {
       max-width: 1200px;
@@ -298,14 +261,12 @@
     @media (max-width: 900px) {
       .header-content, main { padding: 0 10px; }
       .Gadget-list { grid-template-columns: 1fr 1fr; }
-      #image-upload-form { max-width: 98vw; }
     }
     @media (max-width: 600px) {
       .header-title { font-size: 1.2rem; }
       .Gadget-list { grid-template-columns: 1fr; }
       .header-content { padding: 0 4px; }
       main { padding: 0 4px; }
-      #image-upload-form { flex-direction: column; gap: 8px; }
     }
     #register-form-modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(26,35,126,0.18); align-items:center; justify-content:center; z-index:10001; }
     #register-form-modal > div { background:#fff; border-radius:12px; padding:32px 24px; box-shadow:0 2px 16px rgba(26,35,126,0.13); }
@@ -402,7 +363,6 @@
       color: #fff;
     }
   </style>
-
 </head>
 <body>
   <!-- Login/Register Modal -->
@@ -473,17 +433,6 @@
         </div>
       </div>
     </div>
-    <!-- Image Upload Form (Admin/Dev) -->
-    <form id="image-upload-form" enctype="multipart/form-data">
-      <label><b>Upload Product Image:</b></label>
-      <input type="file" id="product-image-file" name="image" accept="image/*" required>
-      <button type="submit">Upload</button>
-      <span id="upload-result"></span>
-      <div style="font-size:0.95em;color:#e74c3c;margin-top:4px;">
-        <b>Note:</b> Uploaded images may disappear after a few hours/days on Render free plan.<br>
-        For permanent images, use a cloud image host like <a href="https://cloudinary.com/" target="_blank">Cloudinary</a>.
-      </div>
-    </form>
     <section class="search-bar">
       <input type="text" id="search-input" placeholder="Search for gadgets...">
       <button id="search-btn" onclick="searchGadgets()">Search</button>
@@ -759,7 +708,8 @@
       const container = document.getElementById(containerId);
       container.innerHTML = "";
       products.forEach(p => {
-        const imgUrl = p.image.startsWith("http") ? p.image : `https://ongod-phone-gadget-1.onrender.com/images/${p.image}`;
+        // Accept full image URLs or data URLs, else fallback to backend images folder
+        const imgUrl = (p.image && (p.image.startsWith("http") || p.image.startsWith("data:"))) ? p.image : (p.image ? `https://ongod-phone-gadget-1.onrender.com/images/${p.image}` : "https://via.placeholder.com/110x110?text=No+Image");
         container.innerHTML += `
           <div class="Gadget-item">
             <img src="${imgUrl}" alt="${p.name}">
@@ -791,17 +741,45 @@
         <img src="${imgUrl}" alt="${name}">
         <h2>${name}</h2>
         <p>₦${price}</p>
-        <input type="text" id="order-address" placeholder="Delivery Address" style="width:90%;padding:8px;margin-bottom:12px;border-radius:6px;border:1px solid #b3b8e0;">
+        <label style="font-weight:600;">Order Type:</label>
+        <select id="order-type" style="width:90%;padding:8px;margin-bottom:12px;border-radius:6px;border:1px solid #b3b8e0;" onchange="toggleAddressField()">
+          <option value="delivery">Delivery</option>
+          <option value="pickup">Pick Up</option>
+        </select>
+        <div id="address-field">
+          <input type="text" id="order-address" placeholder="Delivery Address" style="width:90%;padding:8px;margin-bottom:12px;border-radius:6px;border:1px solid #b3b8e0;">
+        </div>
+        <label style="font-weight:600;">Payment Method:</label>
+        <select id="payment-method" style="width:90%;padding:8px;margin-bottom:12px;border-radius:6px;border:1px solid #b3b8e0;">
+          <option value="Pay on Delivery">Pay on Delivery</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+        </select>
         <button onclick="placeOrder('${name}','${price}','${imgUrl}')">Place Order</button>
       `;
       modalBg.style.display = 'flex';
+      setTimeout(toggleAddressField, 10);
+    }
+
+    function toggleAddressField() {
+      const type = document.getElementById('order-type').value;
+      const addressDiv = document.getElementById('address-field');
+      if (type === 'pickup') {
+        addressDiv.style.display = 'none';
+      } else {
+        addressDiv.style.display = 'block';
+      }
     }
 
     async function placeOrder(name, price, imgUrl) {
-      const address = document.getElementById('order-address').value.trim();
-      if (!address) {
-        alert("Enter delivery address.");
-        return;
+      const orderType = document.getElementById('order-type').value;
+      const paymentMethod = document.getElementById('payment-method').value;
+      let address = "";
+      if (orderType === "delivery") {
+        address = document.getElementById('order-address').value.trim();
+        if (!address) {
+          alert("Enter delivery address.");
+          return;
+        }
       }
       const res = await fetch('https://ongod-phone-gadget-1.onrender.com/api/orders', {
         method: "POST",
@@ -813,7 +791,9 @@
           address: address,
           image: imgUrl,
           status: "pending",
-          date: new Date().toLocaleString()
+          date: new Date().toLocaleString(),
+          orderType: orderType,
+          paymentMethod: paymentMethod
         })
       });
       const data = await res.json();
@@ -824,35 +804,6 @@
         alert("Order failed: " + (data.error || data.message));
       }
     }
-
-    // --- Image Upload ---
-    document.getElementById('image-upload-form').onsubmit = async function(e) {
-      e.preventDefault();
-      const fileInput = document.getElementById('product-image-file');
-      const resultSpan = document.getElementById('upload-result');
-      if (!fileInput.files.length) {
-        resultSpan.textContent = "Please select an image.";
-        return;
-      }
-      const formData = new FormData();
-      formData.append('image', fileInput.files[0]);
-      resultSpan.textContent = "Uploading...";
-      try {
-        const res = await fetch('https://ongod-phone-gadget-1.onrender.com/api/products/upload-image', {
-          method: 'POST',
-          body: formData
-        });
-        const data = await res.json();
-        if (data.success) {
-          const fullUrl = `https://ongod-phone-gadget-1.onrender.com/images/${data.filename}`;
-          resultSpan.innerHTML = `Uploaded! <a href="${fullUrl}" target="_blank">${fullUrl}</a>`;
-        } else {
-          resultSpan.textContent = data.error || "Upload failed.";
-        }
-      } catch {
-        resultSpan.textContent = "Upload failed (network error).";
-      }
-    };
 
     // --- Notification Modal ---
     function showNotifications() {
