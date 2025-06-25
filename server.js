@@ -315,9 +315,9 @@ app.delete('/api/admin/clear-all', (req, res) => {
 });
 
 // --- Start server ---
-// Listen on all interfaces for LAN/mobile access
+// Listen on all interfaces for public access on Render
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Backend running on http://0.0.0.0:${PORT} (accessible on your local network)`);
+  console.log(`Backend running on http://0.0.0.0:${PORT} (public on Render)`);
   if (process.env.RENDER_EXTERNAL_HOSTNAME) {
     console.log('Public URL: https://' + process.env.RENDER_EXTERNAL_HOSTNAME);
   }
