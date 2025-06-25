@@ -14,11 +14,22 @@ const app = express();
 // --- CORS: Allow local frontend and your Render backend domain ---
 const allowedOrigins = [
   'http://localhost:3000', // local frontend (React, etc.)
-  'https://your-backend-name.onrender.com' // your Render backend domain
+  'https://ongod-phone-gadget-1.onrender.com' // your Render backend domain
   // Add your frontend production domain here if you deploy frontend elsewhere
 ];
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    // Also allow if origin matches without trailing slash
+    if (allowedOrigins.includes(origin.replace(/\/$/, ''))) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 
@@ -186,6 +197,7 @@ app.post('/api/users/register', async (req, res) => {
   users.push({ username, password: hash, state, area, street, email, phone, address, verified: false, verificationCode });
 
   try {
+    // Remove the next block to disable email sending for testing
     await transporter.sendMail({
       from: `"ONGOD Gadget" <${process.env.GMAIL_USER}>`,
       to: email,
