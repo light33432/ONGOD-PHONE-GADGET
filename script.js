@@ -4,7 +4,7 @@ localStorage.removeItem('gadgetLoggedIn');
 localStorage.removeItem('gadgetLastNotif');
 
 // --- API Endpoints ---
-const API_BASE = "http://localhost:3000/api";
+const API_BASE = "https://ongod-phone-gadget-1.onrender.com/api";
 const ORDERS_API = `${API_BASE}/orders`;
 const PRODUCTS_API = `${API_BASE}/products`;
 const USERS_API = `${API_BASE}/users`;
@@ -288,7 +288,7 @@ function getProductImageUrl(image) {
   if (/^https?:\/\//i.test(image)) {
     return image;
   }
-  return `http://localhost:3000/images/${escapeHtml(image)}`;
+  return `https://ongod-phone-gadget-1.onrender.com/images/${escapeHtml(image)}`;
 }
 
 function displayProducts(containerId, products) {
@@ -541,7 +541,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (loggedIn) loadProductsForUser();
 });
 
-// --- Customer Care Chat (local backend) ---
+// --- Customer Care Chat (public backend) ---
 function sendCareMessage() {
   const input = document.getElementById('care-chat-input');
   const msg = input.value.trim();
@@ -551,7 +551,7 @@ function sendCareMessage() {
   const username = localStorage.getItem('gadgetUsername') || 'Guest';
   const email = localStorage.getItem('gadgetEmail') || '';
 
-  fetch('http://localhost:3000/api/customer-care', {
+  fetch(`${API_BASE}/customer-care`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text: msg, username, email })
@@ -565,7 +565,7 @@ function sendCareMessage() {
 
 function loadCareMessages() {
   const username = localStorage.getItem('gadgetUsername') || 'Guest';
-  fetch(`http://localhost:3000/api/customer-care/user/${username}`)
+  fetch(`${API_BASE}/customer-care/user/${username}`)
     .then(res => res.json())
     .then(messages => {
       renderCareMessages(messages);
