@@ -1,600 +1,423 @@
-// --- Force logout for all users who have logged in before ---
-localStorage.removeItem('gadgetToken');
-localStorage.removeItem('gadgetLoggedIn');
-localStorage.removeItem('gadgetLastNotif');
+// Place this <script> at the end of your <body> or in a separate JS file
 
-// --- API Endpoints ---
-const API_BASE = "https://ongod-phone-gadget-1.onrender.com/api";
-const ORDERS_API = `${API_BASE}/orders`;
-const PRODUCTS_API = `${API_BASE}/products`;
-const USERS_API = `${API_BASE}/users`;
-const NOTIFICATIONS_API = `${API_BASE}/notifications`;
+// --- GLOBALS ---
+let gadgetToken = null;
+let gadgetUsername = null;
 
-// --- Utility Functions ---
-function escapeHtml(unsafe) {
-  return String(unsafe).replace(/[&<"']/g, m => ({
-    '&': '&amp;', '<': '&lt;', '"': '&quot;', "'": '&#039;'
-  }[m]));
-}
+// --- LOGIN/REGISTER/VERIFY LOGIC ---
+document.addEventListener('DOMContentLoaded', () => {
+  // Show login modal on load
+  document.getElementById('login-modal').style.display = 'flex';
+  document.getElementById('main-content').style.display = 'none';
 
-function showNotification(message) {
-  let notif = document.getElementById('custom-notification');
-  if (!notif) {
-    notif = document.createElement('div');
-    notif.id = 'custom-notification';
-    notif.style.cssText = `
-      position: fixed; bottom: 30px; right: 30px;
-      background: #1a237e; color: #fff; padding: 16px 24px;
-      border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-      font-size: 1.1em; z-index: 99999; display: none;
-    `;
-    document.body.appendChild(notif);
-  }
-  notif.innerText = message;
-  notif.style.display = 'block';
-  setTimeout(() => notif.style.display = 'none', 3500);
-}
+  // Switch to register
+  document.getElementById('switch-to-register').onclick = showRegister;
+  document.getElementById('switch-to-login').onclick = showLogin;
 
-function setNotificationDot(show) {
-  const notifBtn = document.getElementById('notification-btn');
-  let dot = notifBtn.querySelector('.notif-dot');
-  if (show) {
-    if (!dot) {
-      dot = document.createElement('span');
-      dot.className = 'notif-dot';
-      notifBtn.appendChild(dot);
-    }
-    dot.style.display = 'block';
-  } else if (dot) {
-    dot.style.display = 'none';
-  }
-}
+  // Register modal buttons
+  document.querySelector('#register-form-modal button:nth-of-type(1)').onclick = register;
+  document.querySelector('#register-form-modal button:nth-of-type(2)').onclick = closeRegisterForm;
 
-// --- Auth & Modal Logic ---
-function showRegisterForm() {
+  // Login button
+  document.getElementById('login-btn').onclick = login;
+
+  // Accept/Decline verification
+  document.querySelector('#verify-modal button:nth-of-type(1)').onclick = acceptVerification;
+  document.querySelector('#verify-modal button:nth-of-type(2)').onclick = declineVerification;
+
+  // Hide register modal on load
+  document.getElementById('register-form-modal').style.display = 'none';
+  document.getElementById('verify-modal').style.display = 'none';
+
+  // Customer care chat
+  document.getElementById('care-chat-btn').onclick = () => {
+    document.getElementById('care-chat-modal').style.display = 'flex';
+  };
+  document.querySelector('#care-chat-modal button').onclick = () => {
+    document.getElementById('care-chat-modal').style.display = 'none';
+  };
+  document.getElementById('care-chat-form').onsubmit = (e) => {
+    e.preventDefault();
+    sendCareMessage();
+  };
+
+  // Notification modal
+  document.querySelector('#notif-modal .close-btn').onclick = () => {
+    document.getElementById('notif-modal').style.display = 'none';
+  };
+
+  // Search
+  document.getElementById('search-btn').onclick = searchGadgets;
+  document.getElementById('search-input').onkeydown = (e) => {
+    if (e.key === 'Enter') searchGadgets();
+  };
+
+  // Hide loading after 2s
+  setTimeout(() => {
+    document.getElementById('loading-screen').style.display = 'none';
+  }, 2000);
+
+  // Fetch gadgets if already logged in (for demo, not persistent)
+  // fetchGadgets();
+});
+
+function showRegister() {
+  document.getElementById('login-box').style.display = 'none';
   document.getElementById('register-form-modal').style.display = 'flex';
+  document.getElementById('verify-modal').style.display = 'none';
+}
+function showLogin() {
+  document.getElementById('login-box').style.display = 'block';
+  document.getElementById('register-form-modal').style.display = 'none';
+  document.getElementById('verify-modal').style.display = 'none';
 }
 function closeRegisterForm() {
   document.getElementById('register-form-modal').style.display = 'none';
+  document.getElementById('login-box').style.display = 'block';
 }
-function showRegister() {
-  document.getElementById('login-title').innerText = "Register";
-  document.getElementById('login-btn').style.display = "none";
-  document.getElementById('register-btn').style.display = "inline-block";
-  document.getElementById('switch-to-register').style.display = "none";
-  document.getElementById('switch-to-login').style.display = "inline-block";
-  document.getElementById('login-error').innerText = "";
+function showRegisterForm() {
+  document.getElementById('register-form-modal').style.display = 'flex';
+  document.getElementById('login-box').style.display = 'none';
 }
-function showLogin() {
-  document.getElementById('login-title').innerText = "Login";
-  document.getElementById('login-btn').style.display = "inline-block";
-  document.getElementById('register-btn').style.display = "none";
-  document.getElementById('switch-to-register').style.display = "inline-block";
-  document.getElementById('switch-to-login').style.display = "none";
-  document.getElementById('login-error').innerText = "";
+function login() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  document.getElementById('login-error').textContent = '';
+  if (!email || !password) {
+    document.getElementById('login-error').textContent = 'Please fill all fields.';
+    return;
+  }
+  // Simulate API login
+  fetch('https://ongod-phone-gadget-1.onrender.com/api/login', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({email, password})
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.token) {
+        gadgetToken = data.token;
+        gadgetUsername = data.username;
+        document.getElementById('login-modal').style.display = 'none';
+        document.getElementById('main-content').style.display = 'block';
+        fetchGadgets();
+        fetchNotifications();
+      } else if (data.verify) {
+        document.getElementById('login-box').style.display = 'none';
+        document.getElementById('verify-modal').style.display = 'flex';
+      } else {
+        document.getElementById('login-error').textContent = data.error || 'Login failed.';
+      }
+    })
+    .catch(() => {
+      document.getElementById('login-error').textContent = 'Network error.';
+    });
 }
-
-// --- Registration ---
-async function register() {
-  const email = document.getElementById('email') ? document.getElementById('email').value.trim() : '';
-  const username = document.getElementById('reg-username') ? document.getElementById('reg-username').value.trim() : '';
-  const phone = document.getElementById('reg-phone') ? document.getElementById('reg-phone').value.trim() : '';
+function register() {
+  const email = document.getElementById('email').value.trim();
+  const phone = document.getElementById('reg-phone').value.trim();
+  const username = document.getElementById('reg-username').value.trim();
   const password = document.getElementById('reg-password').value;
   const state = document.getElementById('reg-state').value;
   const area = document.getElementById('reg-area').value;
-  const street = document.getElementById('reg-street').value;
-  const address = document.getElementById('reg-address') ? document.getElementById('reg-address').value.trim() : '';
-  if (!email || !username || !phone || !password || !state || !area || !street || !address) {
-    document.getElementById('reg-error').innerText = "Please fill all fields.";
+  const street = document.getElementById('reg-street').value.trim();
+  const address = document.getElementById('reg-address').value.trim();
+  document.getElementById('reg-error').textContent = '';
+  if (!email || !phone || !username || !password || !state || !area || !street || !address) {
+    document.getElementById('reg-error').textContent = 'Please fill all fields.';
     return;
   }
-  try {
-    const res = await fetch(`${USERS_API}/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, username, phone, password, state, area, street, address })
+  fetch('https://ongod-phone-gadget-1.onrender.com/api/register', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({email, phone, username, password, state, area, street, address})
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('register-form-modal').style.display = 'none';
+        document.getElementById('verify-modal').style.display = 'flex';
+      } else {
+        document.getElementById('reg-error').textContent = data.error || 'Registration failed.';
+      }
+    })
+    .catch(() => {
+      document.getElementById('reg-error').textContent = 'Network error.';
     });
-    const data = await res.json();
-    if (res.ok) {
-      // Show verification modal
-      document.getElementById('register-form-modal').style.display = 'none';
-      document.getElementById('verify-modal').style.display = 'flex';
-      window._pendingReg = { email, password };
-      document.getElementById('verify-error').innerText = "";
-    } else {
-      document.getElementById('reg-error').innerText = data.message || data.error || "Registration failed.";
-    }
-  } catch {
-    document.getElementById('reg-error').innerText = "Registration failed.";
-  }
 }
-
-// --- Verification Modal Logic ---
-async function acceptVerification() {
+function acceptVerification() {
   const code = document.getElementById('verify-code').value.trim();
-  const { email, password } = window._pendingReg || {};
-  if (!email || !password) {
-    document.getElementById('verify-error').innerText = "Session expired. Please register again.";
-    return;
-  }
   if (!code) {
-    document.getElementById('verify-error').innerText = "Enter the code sent to your email.";
+    document.getElementById('verify-error').textContent = 'Enter the code.';
     return;
   }
-  try {
-    const res = await fetch(`${USERS_API}/verify`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, code })
+  fetch('https://ongod-phone-gadget-1.onrender.com/api/verify', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({code})
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('verify-modal').style.display = 'none';
+        document.getElementById('login-box').style.display = 'block';
+        document.getElementById('login-error').textContent = 'Verification successful! Please login.';
+      } else {
+        document.getElementById('verify-error').textContent = data.error || 'Verification failed.';
+      }
+    })
+    .catch(() => {
+      document.getElementById('verify-error').textContent = 'Network error.';
     });
-    const data = await res.json();
-    if (data.success) {
-      document.getElementById('verify-modal').style.display = 'none';
-      showLogin();
-      document.getElementById('login-error').innerText = "Verification successful! Please log in.";
-    } else {
-      document.getElementById('verify-error').innerText = data.error || "Verification failed.";
-    }
-  } catch {
-    document.getElementById('verify-error').innerText = "Network error. Try again.";
-  }
 }
-
 function declineVerification() {
   document.getElementById('verify-modal').style.display = 'none';
-  window._pendingReg = null;
-  showLogin();
+  document.getElementById('login-box').style.display = 'block';
 }
 
-// --- Login ---
-async function login() {
-  const email = document.getElementById('login-email') ? document.getElementById('login-email').value.trim() : '';
-  const password = document.getElementById('login-password').value;
-  if (!email || !password) {
-    document.getElementById('login-error').innerText = "Please enter your email and password.";
+// --- AREA OPTIONS FOR REGISTRATION ---
+const areaOptions = {
+  Lagos: ['Ikeja', 'Lekki', 'Yaba', 'Surulere', 'Ajah'],
+  Ogun: ['Abeokuta', 'Sango', 'Ijebu Ode', 'Sagamu'],
+  Oyo: ['Ibadan', 'Ogbomosho', 'Oyo Town'],
+  Osun: ['Osogbo', 'Ile-Ife', 'Ilesa'],
+  Ondo: ['Akure', 'Ondo Town', 'Owo'],
+  Ekiti: ['Ado-Ekiti', 'Ikere', 'Ilawe']
+};
+document.getElementById('reg-state').onchange = updateAreaOptions;
+function updateAreaOptions() {
+  const state = document.getElementById('reg-state').value;
+  const areaSelect = document.getElementById('reg-area');
+  areaSelect.innerHTML = '<option value="">Select Area</option>';
+  if (areaOptions[state]) {
+    areaOptions[state].forEach(area => {
+      const opt = document.createElement('option');
+      opt.value = area;
+      opt.textContent = area;
+      areaSelect.appendChild(opt);
+    });
+  }
+}
+
+// --- GADGETS FETCH & RENDER ---
+function fetchGadgets() {
+  fetch('https://ongod-phone-gadget-1.onrender.com/api/gadgets', {
+    headers: {Authorization: `Bearer ${gadgetToken}`}
+  })
+    .then(res => res.json())
+    .then(data => {
+      renderGadgets('phones-list', data.phones);
+      renderGadgets('laptops-list', data.laptops);
+      renderGadgets('accessories-list', data.accessories);
+    });
+}
+function renderGadgets(listId, gadgets) {
+  const list = document.getElementById(listId);
+  list.innerHTML = '';
+  if (!gadgets || !gadgets.length) {
+    list.innerHTML = '<div style="color:#888;">No items found.</div>';
     return;
   }
-  try {
-    const res = await fetch(`${USERS_API}/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
-    if (res.ok && data.token) {
-      localStorage.setItem('gadgetToken', data.token);
-      localStorage.setItem('gadgetLoggedIn', data.username || email);
-      localStorage.setItem('gadgetLastNotif', '');
-      localStorage.setItem('careUsername', data.username || email); // For customer care chat
-      document.getElementById('login-modal').style.display = "none";
-      document.getElementById('main-content').style.display = "block";
-      showNotification('Welcome back, ' + (data.username || email) + '!');
-      loadProductsForUser();
-      checkForNewNotifications();
-    } else if (data.error && data.error.toLowerCase().includes("verify")) {
-      // If not verified, show verification modal
-      window._pendingReg = { email, password };
-      document.getElementById('verify-modal').style.display = 'flex';
-      document.getElementById('verify-error').innerText = "Please verify your email to continue.";
-    } else {
-      document.getElementById('login-error').innerText = data.message || data.error || "Invalid email or password.";
-    }
-  } catch (err) {
-    document.getElementById('login-error').innerText = "Network error or CORS issue. Please check your connection and try again.";
-  }
-}
-
-// --- Logout ---
-function forceLogoutAndRequireLogin(message) {
-  localStorage.removeItem('gadgetToken');
-  localStorage.removeItem('gadgetLoggedIn');
-  localStorage.removeItem('gadgetLastNotif');
-  document.getElementById('main-content').style.display = "none";
-  document.getElementById('login-modal').style.display = "flex";
-  if (message) document.getElementById('login-error').innerText = message;
-}
-
-// --- Notifications ---
-function showNotifications() {
-  document.getElementById('notif-modal').style.display = 'flex';
-  loadOrderNotificationsOnly();
-  setNotificationDot(false);
-  const username = localStorage.getItem('gadgetLoggedIn');
-  if (username) localStorage.setItem('gadgetLastNotif', Date.now().toString());
-}
-
-async function checkForNewNotifications() {
-  const username = localStorage.getItem('gadgetLoggedIn');
-  const token = localStorage.getItem('gadgetToken');
-  if (!username || !token) return setNotificationDot(false);
-  try {
-    const notifRes = await fetch(`${NOTIFICATIONS_API}?user=${encodeURIComponent(username)}`, {
-      headers: { "Authorization": "Bearer " + token }
-    });
-    const notifs = await notifRes.json();
-    let lastSeen = localStorage.getItem('gadgetLastNotif') || "0";
-    let hasNew = false;
-    for (let n of notifs) {
-      if (n.date && new Date(n.date).getTime() > parseInt(lastSeen)) {
-        hasNew = true;
-        break;
-      }
-    }
-    setNotificationDot(hasNew);
-  } catch {
-    setNotificationDot(false);
-  }
-}
-
-// --- Show only order notifications in modal ---
-async function loadOrderNotificationsOnly() {
-  const notifMessages = document.getElementById('notif-messages');
-  notifMessages.innerHTML = "Loading...";
-  const username = localStorage.getItem('gadgetLoggedIn');
-  const token = localStorage.getItem('gadgetToken');
-  if (!username || !token) {
-    notifMessages.innerHTML = "<div style='color:#888;'>Please log in to view your orders.</div>";
-    return;
-  }
-  try {
-    const notifRes = await fetch(`${NOTIFICATIONS_API}?user=${encodeURIComponent(username)}`, {
-      headers: { "Authorization": "Bearer " + token }
-    });
-    const notifs = await notifRes.json();
-    // Filter only notifications with type "order"
-    const orderNotifs = notifs.filter(n => n.type === "order");
-    let html = `<div style="font-weight:700;color:#3949ab;margin:8px 0;">Your Orders Sent to Admin:</div>`;
-    if (orderNotifs.length) {
-      orderNotifs.forEach(n => {
-        html += `
-          <div style="margin-bottom:10px;padding:8px 0;border-bottom:1px solid #e0e7ff;">
-            <div>${escapeHtml(n.message || '')}</div>
-            <div style="font-size:0.95em;color:#888;">${escapeHtml(n.date || '')}</div>
-          </div>
-        `;
-      });
-    } else {
-      html += "<div style='color:#888;'>No order notifications yet.</div>";
-    }
-    notifMessages.innerHTML = html;
-  } catch {
-    notifMessages.innerHTML = "<div style='color:#e74c3c;'>Failed to load notifications.</div>";
-  }
-}
-
-// --- Products ---
-function loadProductsForUser() {
-  fetchAndDisplayProducts();
-}
-
-async function fetchAndDisplayProducts() {
-  try {
-    const res = await fetch(PRODUCTS_API);
-    const products = await res.json();
-    const phones = products.filter(p => (p.category || '').toLowerCase() === 'phones');
-    const laptops = products.filter(p => (p.category || '').toLowerCase() === 'laptops');
-    const accessories = products.filter(p => (p.category || '').toLowerCase() === 'accessories');
-    displayProducts('phones-list', phones);
-    displayProducts('laptops-list', laptops);
-    displayProducts('accessories-list', accessories);
-  } catch {
-    showNotification('Failed to load products.');
-  }
-}
-
-function getProductImageUrl(image) {
-  if (!image) return '';
-  // If image is already a full URL, use it; otherwise, prepend backend path
-  if (/^https?:\/\//i.test(image)) {
-    return image;
-  }
-  return `https://ongod-phone-gadget-1.onrender.com/images/${escapeHtml(image)}`;
-}
-
-function displayProducts(containerId, products) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  if (!products.length) {
-    container.innerHTML = '<div style="color:#e74c3c;">No products found.</div>';
-    return;
-  }
-  container.innerHTML = products.map(product => {
-    const imageUrl = getProductImageUrl(product.image || '');
-    return `
-      <div class="Gadget-item">
-        <img src="${imageUrl}" alt="${escapeHtml(product.name || '')}">
-        <h2>${escapeHtml(product.name || '')}</h2>
-        <p>₦${escapeHtml(product.price || '')}</p>
-        <div class="button-group">
-          <button onclick="showBuyModal('${escapeHtml(product.name || '')}', '${escapeHtml(product.price || '')}', '${imageUrl}')">Buy Now</button>
-        </div>
+  gadgets.forEach(gadget => {
+    const div = document.createElement('div');
+    div.className = 'Gadget-item';
+    div.innerHTML = `
+      <img src="${gadget.imgUrl}" alt="${gadget.name}">
+      <h2>${gadget.name}</h2>
+      <p>₦${gadget.price}</p>
+      <div class="button-group">
+        <button onclick="showOrderModal('${gadget._id}','${gadget.name}','${gadget.price}','${gadget.imgUrl}')">Buy Now</button>
+        <button onclick="showDetails('${gadget._id}')">Details</button>
       </div>
     `;
-  }).join('');
+    list.appendChild(div);
+  });
 }
 
-// --- Search ---
-async function searchGadgets() {
-  const searchTerm = document.getElementById('search-input').value.toLowerCase();
-  if (!searchTerm.trim()) {
-    loadProductsForUser();
+// --- SEARCH ---
+function searchGadgets() {
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  if (!q) {
+    fetchGadgets();
     return;
   }
-  try {
-    const res = await fetch(`${PRODUCTS_API}?search=${encodeURIComponent(searchTerm)}`);
-    const products = await res.json();
-    const phones = products.filter(p => (p.category || '').toLowerCase() === 'phones');
-    const laptops = products.filter(p => (p.category || '').toLowerCase() === 'laptops');
-    const accessories = products.filter(p => (p.category || '').toLowerCase() === 'accessories');
-    displayProducts('phones-list', phones);
-    displayProducts('laptops-list', laptops);
-    displayProducts('accessories-list', accessories);
-    if (products.length === 0) {
-      showNotification('No products found matching your search.');
-    }
-  } catch {
-    showNotification('Failed to search products.');
-  }
+  fetch(`https://ongod-phone-gadget-1.onrender.com/api/gadgets/search?q=${encodeURIComponent(q)}`, {
+    headers: {Authorization: `Bearer ${gadgetToken}`}
+  })
+    .then(res => res.json())
+    .then(data => {
+      renderGadgets('phones-list', data.phones);
+      renderGadgets('laptops-list', data.laptops);
+      renderGadgets('accessories-list', data.accessories);
+    });
 }
 
-// --- Buy Modal ---
-function showBuyModal(productName, productPrice, productImage) {
+// --- BUY NOW MODAL WITH ADDRESS & MAP ---
+function showOrderModal(id, name, price, imgUrl) {
+  if (!gadgetToken) {
+    alert("Please login first.");
+    return;
+  }
+  const modalBg = document.getElementById('modal-bg');
   const modalContent = document.getElementById('modal-content');
-  let basePrice = parseFloat(productPrice);
-  let deliveryTotal = Math.round(basePrice * 2);
-  let pickupTotal = Math.round(basePrice * 1.3);
   modalContent.innerHTML = `
     <button class="close-btn" onclick="document.getElementById('modal-bg').style.display='none'">&times;</button>
-    <img src="${escapeHtml(productImage)}" alt="${escapeHtml(productName)}">
-    <h2>${escapeHtml(productName)}</h2>
-    <div id="price-info">
-      <p>Price: ₦<span id="price-value">${deliveryTotal}</span></p>
+    <img src="${imgUrl}" alt="${name}">
+    <h2>${name}</h2>
+    <p>₦${price}</p>
+    <div id="user-address-section" style="margin-bottom:12px;">
+      <b>Your Registered Address:</b>
+      <div id="user-address" style="margin:6px 0 10px 0;color:#3949ab;"></div>
+      <div id="user-map" style="width:100%;height:180px;border-radius:10px;overflow:hidden;"></div>
     </div>
-    <form id="orderForm">
-      <div style="margin: 15px 0;">
-        <label style="display: block; margin-bottom: 10px;">
-          <input type="radio" name="order-type" value="delivery" checked> Delivery
-        </label>
-        <label style="display: block;">
-          <input type="radio" name="order-type" value="pickup"> Pickup
-        </label>
-      </div>
-      <div id="payment-method-container" style="margin: 15px 0;">
-        <select id="payment-method" style="width: 100%; padding: 8px; border-radius: 5px;">
-          <option value="">Select Payment Method</option>
-          <option value="Cash on Delivery">Cash on Delivery</option>
-          <option value="Bank Transfer">Bank Transfer</option>
-        </select>
-      </div>
-      <div id="auto-map-container" style="margin: 15px 0;"></div>
-      <button type="submit" style="width: 100%;">Confirm Order</button>
-    </form>
+    <label style="font-weight:600;">Order Type:</label>
+    <select id="order-type" style="width:90%;padding:8px;margin-bottom:12px;border-radius:6px;border:1px solid #b3b8e0;" onchange="toggleAddressField()">
+      <option value="delivery">Delivery</option>
+      <option value="pickup">Pick Up</option>
+    </select>
+    <div id="address-field">
+      <input type="text" id="order-address" placeholder="Delivery Address" style="width:90%;padding:8px;margin-bottom:12px;border-radius:6px;border:1px solid #b3b8e0;">
+    </div>
+    <label style="font-weight:600;">Payment Method:</label>
+    <select id="payment-method" style="width:90%;padding:8px;margin-bottom:12px;border-radius:6px;border:1px solid #b3b8e0;">
+      <option value="Pay on Delivery">Pay on Delivery</option>
+      <option value="Bank Transfer">Bank Transfer</option>
+    </select>
+    <button onclick="placeOrder('${name}','${price}','${imgUrl}')">Place Order</button>
   `;
-  document.getElementById('modal-bg').style.display = 'flex';
-  setTimeout(showUserMapInBuyModal, 0);
-  const orderTypeInputs = document.querySelectorAll('input[name="order-type"]');
-  const paymentMethodContainer = document.getElementById('payment-method-container');
-  const priceValue = document.getElementById('price-value');
-  orderTypeInputs.forEach(input => {
-    input.addEventListener('change', function() {
-      showUserMapInBuyModal();
-      if (this.value === 'pickup') {
-        paymentMethodContainer.style.display = 'none';
-        priceValue.textContent = pickupTotal;
+  modalBg.style.display = 'flex';
+  setTimeout(toggleAddressField, 10);
+  fetchUserAddressAndMap();
+}
+function fetchUserAddressAndMap() {
+  if (!gadgetUsername) return;
+  fetch(`https://ongod-phone-gadget-1.onrender.com/api/users/${gadgetUsername}/address`)
+    .then(res => res.json())
+    .then(data => {
+      const addressDiv = document.getElementById('user-address');
+      const mapDiv = document.getElementById('user-map');
+      if (data.address) {
+        addressDiv.textContent = data.address;
+        const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(data.address)}&output=embed`;
+        mapDiv.innerHTML = `<iframe width="100%" height="180" frameborder="0" style="border:0" src="${mapUrl}" allowfullscreen></iframe>`;
+        const addrInput = document.getElementById('order-address');
+        if (addrInput) addrInput.value = data.address;
       } else {
-        paymentMethodContainer.style.display = 'block';
-        priceValue.textContent = deliveryTotal;
+        addressDiv.textContent = "No address found.";
+        mapDiv.innerHTML = "";
       }
     });
-  });
-  document.getElementById('orderForm').onsubmit = function(event) {
-    submitOrder(event, productName, productPrice, productImage);
-  };
 }
-
-// --- Map: Get address from backend and show map ---
-async function showUserMapInBuyModal() {
-  const username = localStorage.getItem('gadgetLoggedIn');
-  const token = localStorage.getItem('gadgetToken');
-  const container = document.getElementById('auto-map-container');
-  if (!username || !token) {
-    if (container) container.innerHTML = "<div style='color:#e74c3c;'>Please log in to see your delivery location.</div>";
-    return;
-  }
-  try {
-    // Fetch address from backend
-    const res = await fetch(`${USERS_API}/${encodeURIComponent(username)}/address`, {
-      headers: { "Authorization": "Bearer " + token }
-    });
-    if (!res.ok) {
-      if (container) container.innerHTML = "<div style='color:#e74c3c;'>User not found. Please register or log in again.</div>";
-      return;
-    }
-    const data = await res.json();
-    const address = data.address;
-    container.innerHTML = `
-      <div style="margin:10px 0 5px 0;color:#3949ab;font-weight:700;">Delivery/Pickup Location</div>
-      <div style="width:100%;height:220px;border-radius:10px;overflow:hidden;margin-bottom:10px;">
-        <iframe
-          width="100%"
-          height="100%"
-          style="border:0"
-          loading="lazy"
-          allowfullscreen
-          referrerpolicy="no-referrer-when-downgrade"
-          src="https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed">
-        </iframe>
-      </div>
-      <div style="color:#3949ab;font-weight:700;">${address}</div>
-    `;
-  } catch {
-    if (container) container.innerHTML = "<div style='color:#e74c3c;'>Could not load user info.</div>";
-  }
-}
-
-// --- Order Submission ---
-async function submitOrder(event, productName, productPrice, productImage) {
-  event.preventDefault();
-  const username = localStorage.getItem('gadgetLoggedIn');
-  const token = localStorage.getItem('gadgetToken');
-  if (!username || !token) {
-    showNotification('Please login first.');
-    return;
-  }
-  let basePrice = parseFloat(productPrice);
-  let total = basePrice;
-  let paymentMethod = '';
-  let showBankDetails = false;
-  const orderType = document.querySelector('input[name="order-type"]:checked').value;
-  if (orderType === 'pickup') {
-    total = Math.round(basePrice * 1.3);
-    paymentMethod = 'Bank Transfer Only';
-    showBankDetails = true;
+function toggleAddressField() {
+  const type = document.getElementById('order-type').value;
+  const addressDiv = document.getElementById('address-field');
+  const userAddressSection = document.getElementById('user-address-section');
+  if (type === 'pickup') {
+    addressDiv.style.display = 'none';
+    if (userAddressSection) userAddressSection.style.display = 'none';
   } else {
-    total = Math.round(basePrice * 2);
-    const selectedMethod = document.getElementById('payment-method').value;
-    if (!selectedMethod) {
-      alert('Please select a payment method.');
-      return;
-    }
-    paymentMethod = selectedMethod;
-    if (selectedMethod === "Bank Transfer") showBankDetails = true;
-  }
-  let address = '';
-  try {
-    // Fetch address from backend for order
-    const res = await fetch(`${USERS_API}/${encodeURIComponent(username)}/address`, {
-      headers: { "Authorization": "Bearer " + token }
-    });
-    if (res.ok) {
-      const data = await res.json();
-      address = data.address;
-    }
-  } catch {}
-  document.getElementById('modal-bg').style.display = 'none';
-  showNotification('Order placed successfully!');
-  setNotificationDot(true);
-  if (showBankDetails) {
-    setTimeout(() => {
-      alert("Please transfer the total amount to:\nAccount Name: ONGOD GADGETS\nAccount Number: 1234567890\nBank: Zenith Bank");
-    }, 500);
-  }
-  try {
-    await fetch(ORDERS_API, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      },
-      body: JSON.stringify({
-        username,
-        product: productName,
-        price: total,
-        base_price: basePrice,
-        payment_method: paymentMethod,
-        order_type: orderType,
-        address,
-        image: productImage,
-        status: "pending",
-        date: new Date().toLocaleString()
-      })
-    });
-    await fetch(NOTIFICATIONS_API, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      },
-      body: JSON.stringify({
-        type: "order",
-        username: username,
-        message: `New order from ${username}: ${productName} - ₦${total} (${orderType}, ${paymentMethod})\nAddress: ${address}`,
-        date: new Date().toLocaleString()
-      })
-    });
-    loadOrderNotificationsOnly();
-    setNotificationDot(true);
-  } catch {
-    showNotification('Order sent, but failed to notify admin.');
+    addressDiv.style.display = 'block';
+    if (userAddressSection) userAddressSection.style.display = 'block';
+    fetchUserAddressAndMap();
   }
 }
-
-// --- Page Load ---
-document.addEventListener('DOMContentLoaded', function() {
-  const loggedIn = localStorage.getItem('gadgetLoggedIn');
-  if (loggedIn) {
-    document.getElementById('login-modal').style.display = "none";
-    document.getElementById('main-content').style.display = "block";
-    loadProductsForUser();
-    loadOrderNotificationsOnly();
-    checkForNewNotifications();
+function placeOrder(name, price, imgUrl) {
+  const orderType = document.getElementById('order-type').value;
+  const address = orderType === 'delivery'
+    ? document.getElementById('order-address').value.trim()
+    : 'Pick Up';
+  const payment = document.getElementById('payment-method').value;
+  if (orderType === 'delivery' && !address) {
+    alert('Please enter your delivery address.');
+    return;
   }
-  document.getElementById('search-input').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') searchGadgets();
-  });
-  setInterval(() => {
-    if (localStorage.getItem('gadgetLoggedIn')) {
-      loadOrderNotificationsOnly();
-      checkForNewNotifications();
-    }
-  }, 60000);
-  if (loggedIn) loadProductsForUser();
-});
+  fetch('https://ongod-phone-gadget-1.onrender.com/api/orders', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${gadgetToken}`
+    },
+    body: JSON.stringify({name, price, imgUrl, orderType, address, payment})
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('modal-bg').style.display = 'none';
+        alert('Order placed successfully!');
+        fetchNotifications();
+      } else {
+        alert(data.error || 'Order failed.');
+      }
+    });
+}
 
-// --- Customer Care Chat (public backend) ---
+// --- DETAILS MODAL ---
+function showDetails(id) {
+  fetch(`https://ongod-phone-gadget-1.onrender.com/api/gadgets/${id}`, {
+    headers: {Authorization: `Bearer ${gadgetToken}`}
+  })
+    .then(res => res.json())
+    .then(gadget => {
+      const modalBg = document.getElementById('modal-bg');
+      const modalContent = document.getElementById('modal-content');
+      modalContent.innerHTML = `
+        <button class="close-btn" onclick="document.getElementById('modal-bg').style.display='none'">&times;</button>
+        <img src="${gadget.imgUrl}" alt="${gadget.name}">
+        <h2>${gadget.name}</h2>
+        <p>₦${gadget.price}</p>
+        <div style="color:#3949ab;margin-bottom:10px;">${gadget.description || ''}</div>
+        <button onclick="showOrderModal('${gadget._id}','${gadget.name}','${gadget.price}','${gadget.imgUrl}')">Buy Now</button>
+      `;
+      modalBg.style.display = 'flex';
+    });
+}
+
+// --- NOTIFICATIONS ---
+function showNotifications() {
+  document.getElementById('notif-modal').style.display = 'flex';
+  fetchNotifications();
+}
+function fetchNotifications() {
+  if (!gadgetToken) return;
+  fetch('https://ongod-phone-gadget-1.onrender.com/api/notifications', {
+    headers: {Authorization: `Bearer ${gadgetToken}`}
+  })
+    .then(res => res.json())
+    .then(data => {
+      const notifDiv = document.getElementById('notif-messages');
+      notifDiv.innerHTML = '';
+      if (!data.length) {
+        notifDiv.innerHTML = '<div style="color:#888;">No notifications yet.</div>';
+        return;
+      }
+      data.forEach(msg => {
+        const div = document.createElement('div');
+        div.style.marginBottom = '10px';
+        div.innerHTML = `<b>${msg.title}</b><br><span style="color:#3949ab;">${msg.body}</span><br><span style="font-size:0.9em;color:#888;">${new Date(msg.date).toLocaleString()}</span>`;
+        notifDiv.appendChild(div);
+      });
+    });
+}
+
+// --- CUSTOMER CARE CHAT ---
 function sendCareMessage() {
   const input = document.getElementById('care-chat-input');
   const msg = input.value.trim();
   if (!msg) return;
-
-  // Get username/email from localStorage or set as Guest
-  const username = localStorage.getItem('gadgetUsername') || 'Guest';
-  const email = localStorage.getItem('gadgetEmail') || '';
-
-  fetch(`${API_BASE}/customer-care`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: msg, username, email })
-  })
-  .then(res => res.json())
-  .then(() => {
-    input.value = '';
-    loadCareMessages();
-  });
+  const messagesDiv = document.getElementById('care-chat-messages');
+  const userMsg = document.createElement('div');
+  userMsg.style.textAlign = 'right';
+  userMsg.style.marginBottom = '8px';
+  userMsg.innerHTML = `<span style="background:#e3e8ff;padding:6px 12px;border-radius:8px;display:inline-block;">${msg}</span>`;
+  messagesDiv.appendChild(userMsg);
+  input.value = '';
+  // Simulate bot reply
+  setTimeout(() => {
+    const botMsg = document.createElement('div');
+    botMsg.style.textAlign = 'left';
+    botMsg.style.marginBottom = '8px';
+    botMsg.innerHTML = `<span style="background:#2ecc71;color:#fff;padding:6px 12px;border-radius:8px;display:inline-block;">Thank you for contacting customer care. We'll get back to you soon.</span>`;
+    messagesDiv.appendChild(botMsg);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }, 1000);
 }
-
-function loadCareMessages() {
-  const username = localStorage.getItem('gadgetUsername') || 'Guest';
-  fetch(`${API_BASE}/customer-care/user/${username}`)
-    .then(res => res.json())
-    .then(messages => {
-      renderCareMessages(messages);
-    });
-}
-
-function renderCareMessages(messages) {
-  const box = document.getElementById('care-chat-messages');
-  box.innerHTML = '';
-  messages.forEach(m => {
-    const div = document.createElement('div');
-    div.style.marginBottom = '8px';
-    div.style.textAlign = m.from === 'user' ? 'right' : 'left';
-    div.innerHTML = `<span style="background:${m.from==='user'?'#e0f7fa':'#f1f8e9'};padding:7px 12px;border-radius:8px;display:inline-block;">${m.text}</span>`;
-    box.appendChild(div);
-  });
-  box.scrollTop = box.scrollHeight;
-}
-
-// --- Health Check (optional for debugging) ---
-async function healthCheck() {
-  try {
-    const res = await fetch(`${API_BASE}/health`);
-    if (res.ok) {
-      const data = await res.json();
-      console.log('API Health:', data);
-    }
-  } catch (e) {
-    console.warn('API health check failed.');
-  }
-}
-healthCheck();

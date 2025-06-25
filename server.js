@@ -11,12 +11,8 @@ const fs = require('fs');
 
 const app = express();
 
-// --- CORS: Allow local frontend and Render backend domain ---
+// --- CORS: Only allow Render backend domain ---
 const allowedOrigins = [
-  'http://localhost:3000',
-  'http://127.0.0.1:5501',
-  'http://localhost:5500',
-  'http://127.0.0.1:5500',
   'https://ongod-phone-gadget-1.onrender.com'
 ];
 app.use(cors({
