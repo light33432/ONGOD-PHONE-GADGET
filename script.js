@@ -179,8 +179,8 @@ async function login() {
     } else {
       document.getElementById('login-error').innerText = data.message || data.error || "Invalid email or password.";
     }
-  } catch {
-    document.getElementById('login-error').innerText = "Login failed.";
+  } catch (err) {
+    document.getElementById('login-error').innerText = "Network error or CORS issue. Please check your connection and try again.";
   }
 }
 
@@ -584,3 +584,17 @@ function renderCareMessages(messages) {
   });
   box.scrollTop = box.scrollHeight;
 }
+
+// --- Health Check (optional for debugging) ---
+async function healthCheck() {
+  try {
+    const res = await fetch(`${API_BASE}/health`);
+    if (res.ok) {
+      const data = await res.json();
+      console.log('API Health:', data);
+    }
+  } catch (e) {
+    console.warn('API health check failed.');
+  }
+}
+healthCheck();

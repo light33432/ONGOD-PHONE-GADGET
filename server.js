@@ -14,6 +14,7 @@ const app = express();
 // --- CORS: Allow local frontend and your Render backend domain ---
 const allowedOrigins = [
   'http://localhost:3000', // local frontend (React, etc.)
+  'http://127.0.0.1:5501', // VS Code Live Server
   'https://ongod-phone-gadget-1.onrender.com' // your Render backend domain
   // Add your frontend production domain here if you deploy frontend elsewhere
 ];
@@ -354,4 +355,9 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
   console.error('Server error:', err);
   res.status(500).json({ error: 'Internal server error' });
+});
+
+// --- ADDITIONAL: Health check endpoint for Render or uptime monitoring ---
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', time: new Date() });
 });
