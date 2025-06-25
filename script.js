@@ -4,7 +4,7 @@ localStorage.removeItem('gadgetLoggedIn');
 localStorage.removeItem('gadgetLastNotif');
 
 // --- API Endpoints ---
-const API_BASE = "https://ongod-phone-gadget-1.onrender.com/api";
+const API_BASE = "http://localhost:3000/api";
 const ORDERS_API = `${API_BASE}/orders`;
 const PRODUCTS_API = `${API_BASE}/products`;
 const USERS_API = `${API_BASE}/users`;
@@ -282,6 +282,15 @@ async function fetchAndDisplayProducts() {
   }
 }
 
+function getProductImageUrl(image) {
+  if (!image) return '';
+  // If image is already a full URL, use it; otherwise, prepend backend path
+  if (/^https?:\/\//i.test(image)) {
+    return image;
+  }
+  return `http://localhost:3000/images/${escapeHtml(image)}`;
+}
+
 function displayProducts(containerId, products) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -289,16 +298,19 @@ function displayProducts(containerId, products) {
     container.innerHTML = '<div style="color:#e74c3c;">No products found.</div>';
     return;
   }
-  container.innerHTML = products.map(product => `
-    <div class="Gadget-item">
-      <img src="${escapeHtml(product.image || '')}" alt="${escapeHtml(product.name || '')}">
-      <h2>${escapeHtml(product.name || '')}</h2>
-      <p>₦${escapeHtml(product.price || '')}</p>
-      <div class="button-group">
-        <button onclick="showBuyModal('${escapeHtml(product.name || '')}', '${escapeHtml(product.price || '')}', '${escapeHtml(product.image || '')}')">Buy Now</button>
+  container.innerHTML = products.map(product => {
+    const imageUrl = getProductImageUrl(product.image || '');
+    return `
+      <div class="Gadget-item">
+        <img src="${imageUrl}" alt="${escapeHtml(product.name || '')}">
+        <h2>${escapeHtml(product.name || '')}</h2>
+        <p>₦${escapeHtml(product.price || '')}</p>
+        <div class="button-group">
+          <button onclick="showBuyModal('${escapeHtml(product.name || '')}', '${escapeHtml(product.price || '')}', '${imageUrl}')">Buy Now</button>
+        </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 // --- Search ---
@@ -528,3 +540,47 @@ document.addEventListener('DOMContentLoaded', function() {
   }, 60000);
   if (loggedIn) loadProductsForUser();
 });
+
+// --- Customer Care Chat (local backend) ---
+function sendCareMessage() {
+  const input = document.getElementById('care-chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  // Get username/email from localStorage or set as Guest
+  const username = localStorage.getItem('gadgetUsername') || 'Guest';
+  const email = localStorage.getItem('gadgetEmail') || '';
+
+  fetch('http://localhost:3000/api/customer-care', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: msg, username, email })
+  })
+  .then(res => res.json())
+  .then(() => {
+    input.value = '';
+    loadCareMessages();
+  });
+}
+
+function loadCareMessages() {
+  const username = localStorage.getItem('gadgetUsername') || 'Guest';
+  fetch(`http://localhost:3000/api/customer-care/user/${username}`)
+    .then(res => res.json())
+    .then(messages => {
+      renderCareMessages(messages);
+    });
+}
+
+function renderCareMessages(messages) {
+  const box = document.getElementById('care-chat-messages');
+  box.innerHTML = '';
+  messages.forEach(m => {
+    const div = document.createElement('div');
+    div.style.marginBottom = '8px';
+    div.style.textAlign = m.from === 'user' ? 'right' : 'left';
+    div.innerHTML = `<span style="background:${m.from==='user'?'#e0f7fa':'#f1f8e9'};padding:7px 12px;border-radius:8px;display:inline-block;">${m.text}</span>`;
+    box.appendChild(div);
+  });
+  box.scrollTop = box.scrollHeight;
+}
