@@ -363,6 +363,19 @@
       color: #fff;
     }
   </style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ONGOD PHONE GADGET</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script src="script.js" defer></script>
+  <style>
+    /* ...existing styles... */
+    /* (No changes needed to your CSS for this update) */
+  </style>
 </head>
 <body>
   <!-- Login/Register Modal -->
@@ -411,12 +424,11 @@
       <div>
         <h2 style="color:#3949ab;">Verify Your Email</h2>
         <p>A verification code has been sent to your email. Enter it below:</p>
-        <input type="text" id="verify-code" placeholder="Enter code">
-        <div style="margin-bottom:12px;">
-          <button>Accept</button>
-          <button>Decline</button>
-        </div>
-        <div id="verify-error" style="color:#e74c3c;"></div>
+        <!-- Updated verification code input and buttons -->
+        <input id="verify-code-input" type="text" placeholder="Enter code">
+        <div id="verify-error" style="color:red"></div>
+        <button id="verify-btn">Verify</button>
+        <button id="cancel-verify-btn">Cancel</button>
       </div>
     </div>
   </div>
@@ -425,11 +437,11 @@
     <div class="header-container">
       <div class="header-content">
         <div class="header-logo">
-          <img src="https://ongod-phone-gadget-1.onrender.com/images/Gemini_Generated_Image_63jjax63jjax63jj.png" alt="ONGOD Logo">
+          <img src="images/Gemini_Generated_Image_63jjax63jjax63jj.png" alt="ONGOD Logo">
           <span class="header-title">ONGOD PHONE GADGET</span>
         </div>
         <div class="header-actions">
-          <img src="https://ongod-phone-gadget-1.onrender.com/images/notificationicon.png" alt="Notification" id="notification-btn">
+          <img src="images/notificationicon.png" alt="Notification" id="notification-btn">
         </div>
       </div>
     </div>
@@ -465,7 +477,7 @@
   </div>
   <section id="loading-screen" style="display:flex;align-items:center;justify-content:center;height:100vh;background:rgba(255,255,255,0.9);position:fixed;top:0;left:0;width:100%;z-index:9999;">
     <div style="text-align:center;">
-      <img src="https://ongod-phone-gadget-1.onrender.com/images/loading.png" alt="Loading..." style="width:80px;height:80px;">
+      <img src="images/loading.png" alt="Loading..." style="width:80px;height:80px;">
       <p style="color:#3949ab;font-size:1.2em;margin-top:16px;">Loading...</p>
       <div style="margin-top:20px;color:#1a237e;font-size:1.1em;">
       
@@ -475,7 +487,7 @@
 <div id="care-chat-modal" style="display:none;position:fixed;bottom:170px;right:30px;width:320px;max-width:95vw;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.18);z-index:10002;flex-direction:column;">
   <div style="background:#2ecc71;color:#fff;padding:14px 18px;border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:space-between;">
     <span>
-      <img src="https://ongod-phone-gadget-1.onrender.com/images/customercare.jpg" alt="Care" style="width:24px;height:24px;vertical-align:middle;margin-right:6px;">
+      <img src="images/customer care.jpg" alt="Care" style="width:24px;height:24px;vertical-align:middle;margin-right:6px;">
       Customer Care
     </span>
     <button style="background:none;border:none;color:#fff;font-size:1.3em;cursor:pointer;">&times;</button>
