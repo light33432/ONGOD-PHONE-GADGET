@@ -333,6 +333,45 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date() });
 });
 
+// --- GADGETS ENDPOINTS FOR FRONTEND COMPATIBILITY ---
+
+// Get all gadgets split by category (for old frontend compatibility)
+app.get('/api/gadgets', (req, res) => {
+  const phones = products.filter(p => p.category === 'phones');
+  const laptops = products.filter(p => p.category === 'laptops');
+  const accessories = products.filter(p => p.category === 'accessories');
+  res.json({
+    phones,
+    laptops,
+    accessories
+  });
+});
+
+// Search gadgets by name/category (for old frontend compatibility)
+app.get('/api/gadgets/search', (req, res) => {
+  const q = (req.query.q || '').toLowerCase();
+  const filtered = products.filter(p =>
+    (p.name && p.name.toLowerCase().includes(q)) ||
+    (p.category && p.category.toLowerCase().includes(q))
+  );
+  const phones = filtered.filter(p => p.category === 'phones');
+  const laptops = filtered.filter(p => p.category === 'laptops');
+  const accessories = filtered.filter(p => p.category === 'accessories');
+  res.json({
+    phones,
+    laptops,
+    accessories
+  });
+});
+
+// Get single gadget by id (for old frontend compatibility)
+app.get('/api/gadgets/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const gadget = products.find(p => p.id === id);
+  if (!gadget) return res.status(404).json({ error: 'Gadget not found' });
+  res.json(gadget);
+});
+
 // --- 404 Handler for unknown routes ---
 app.use((req, res, next) => {
   res.status(404).json({ error: 'Endpoint not found' });
