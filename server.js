@@ -11,9 +11,11 @@ const fs = require('fs');
 
 const app = express();
 
-// --- CORS: Only allow Render backend domain ---
+// --- CORS: Allow Render domain and local dev for testing ---
 const allowedOrigins = [
-  'https://ongod-phone-gadget-1.onrender.com'
+  'https://ongod-phone-gadget-1.onrender.com',
+  'http://127.0.0.1:5501', // <-- add this for local frontend testing
+  'http://localhost:5501'   // <-- add this for local frontend testing
 ];
 app.use(cors({
   origin: function (origin, callback) {
@@ -349,3 +351,5 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log('Public URL: https://' + process.env.RENDER_EXTERNAL_HOSTNAME);
   }
 });
+
+// --- TIP: Remove local origins from allowedOrigins before deploying to production for security! ---
