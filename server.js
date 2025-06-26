@@ -11,11 +11,12 @@ const fs = require('fs');
 
 const app = express();
 
-// --- CORS: Allow Render domain and local dev for testing ---
+// --- CORS: Allow Render domain, GitHub Pages, and local dev for testing ---
 const allowedOrigins = [
   'https://ongod-phone-gadget-1.onrender.com',
-  'http://127.0.0.1:5501', // <-- add this for local frontend testing
-  'http://localhost:5501'   // <-- add this for local frontend testing
+  'http://127.0.0.1:5501',
+  'http://localhost:5501',
+  'https://light33432.github.io' // <-- GitHub Pages frontend
 ];
 app.use(cors({
   origin: function (origin, callback) {
@@ -44,7 +45,7 @@ const PORT = process.env.PORT || 3000;
 // In-memory data (replace with DB in production)
 let users = [];
 let products = [
-  { id: 1, name: "iPhone 11", price: 900000, category: "phones", image: "iphone11.jpg" },
+  { id: 1, name: "iPhone 11", price: 900000, category: "phones", image: "phone11.jpg" },
   { id: 2, name: "HP Pavilion", price: 650000, category: "laptops", image: "hplaptop.jpg" },
   { id: 3, name: "Mouse", price: 120000, category: "accessories", image: "mouse.jpg" }
 ];
