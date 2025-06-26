@@ -87,8 +87,8 @@ function login() {
     document.getElementById('login-error').textContent = 'Please fill all fields.';
     return;
   }
-  // Simulate API login
-  fetch('https://ongod-phone-gadget-1.onrender.com/api/login', {
+  // Use correct backend endpoint
+  fetch('https://ongod-phone-gadget-1.onrender.com/api/users/login', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({email, password})
@@ -100,7 +100,7 @@ function login() {
         gadgetUsername = data.username;
         document.getElementById('login-modal').style.display = 'none';
         document.getElementById('main-content').style.display = 'block';
-        fetchGadgets();
+        fetchProducts();
         fetchNotifications();
       } else if (data.verify) {
         document.getElementById('login-box').style.display = 'none';
@@ -127,7 +127,8 @@ function register() {
     document.getElementById('reg-error').textContent = 'Please fill all fields.';
     return;
   }
-  fetch('https://ongod-phone-gadget-1.onrender.com/api/register', {
+  // Use correct backend endpoint
+  fetch('https://ongod-phone-gadget-1.onrender.com/api/users/register', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({email, phone, username, password, state, area, street, address})
@@ -147,14 +148,16 @@ function register() {
 }
 function acceptVerification() {
   const code = document.getElementById('verify-code').value.trim();
+  const email = document.getElementById('email').value.trim();
   if (!code) {
     document.getElementById('verify-error').textContent = 'Enter the code.';
     return;
   }
-  fetch('https://ongod-phone-gadget-1.onrender.com/api/verify', {
+  // Use correct backend endpoint and send email with code
+  fetch('https://ongod-phone-gadget-1.onrender.com/api/users/verify', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({code})
+    body: JSON.stringify({email, code})
   })
     .then(res => res.json())
     .then(data => {
@@ -199,16 +202,18 @@ function updateAreaOptions() {
   }
 }
 
-// --- GADGETS FETCH & RENDER ---
-function fetchGadgets() {
-  fetch('https://ongod-phone-gadget-1.onrender.com/api/gadgets', {
-    headers: {Authorization: `Bearer ${gadgetToken}`}
-  })
+// --- PRODUCTS FETCH & RENDER ---
+function fetchProducts() {
+  fetch('https://ongod-phone-gadget-1.onrender.com/api/products')
     .then(res => res.json())
     .then(data => {
-      renderGadgets('phones-list', data.phones);
-      renderGadgets('laptops-list', data.laptops);
-      renderGadgets('accessories-list', data.accessories);
+      // Split products by category
+      const phones = data.filter(p => p.category === 'phones');
+      const laptops = data.filter(p => p.category === 'laptops');
+      const accessories = data.filter(p => p.category === 'accessories');
+      renderGadgets('phones-list', phones);
+      renderGadgets('laptops-list', laptops);
+      renderGadgets('accessories-list', accessories);
     });
 }
 function renderGadgets(listId, gadgets) {
@@ -222,12 +227,12 @@ function renderGadgets(listId, gadgets) {
     const div = document.createElement('div');
     div.className = 'Gadget-item';
     div.innerHTML = `
-      <img src="${gadget.imgUrl}" alt="${gadget.name}">
+      <img src="https://ongod-phone-gadget-1.onrender.com/images/${gadget.image}" alt="${gadget.name}">
       <h2>${gadget.name}</h2>
       <p>₦${gadget.price}</p>
       <div class="button-group">
-        <button onclick="showOrderModal('${gadget._id}','${gadget.name}','${gadget.price}','${gadget.imgUrl}')">Buy Now</button>
-        <button onclick="showDetails('${gadget._id}')">Details</button>
+        <button onclick="showOrderModal('${gadget.id}','${gadget.name}','${gadget.price}','https://ongod-phone-gadget-1.onrender.com/images/${gadget.image}')">Buy Now</button>
+        <button onclick="showDetails('${gadget.id}')">Details</button>
       </div>
     `;
     list.appendChild(div);
@@ -238,17 +243,18 @@ function renderGadgets(listId, gadgets) {
 function searchGadgets() {
   const q = document.getElementById('search-input').value.trim().toLowerCase();
   if (!q) {
-    fetchGadgets();
+    fetchProducts();
     return;
   }
-  fetch(`https://ongod-phone-gadget-1.onrender.com/api/gadgets/search?q=${encodeURIComponent(q)}`, {
-    headers: {Authorization: `Bearer ${gadgetToken}`}
-  })
+  fetch(`https://ongod-phone-gadget-1.onrender.com/api/products?search=${encodeURIComponent(q)}`)
     .then(res => res.json())
     .then(data => {
-      renderGadgets('phones-list', data.phones);
-      renderGadgets('laptops-list', data.laptops);
-      renderGadgets('accessories-list', data.accessories);
+      const phones = data.filter(p => p.category === 'phones');
+      const laptops = data.filter(p => p.category === 'laptops');
+      const accessories = data.filter(p => p.category === 'accessories');
+      renderGadgets('phones-list', phones);
+      renderGadgets('laptops-list', laptops);
+      renderGadgets('accessories-list', accessories);
     });
 }
 
@@ -326,7 +332,7 @@ function placeOrder(name, price, imgUrl) {
   const address = orderType === 'delivery'
     ? document.getElementById('order-address').value.trim()
     : 'Pick Up';
-  const payment = document.getElementById('payment-method').value;
+  const payment_method = document.getElementById('payment-method').value;
   if (orderType === 'delivery' && !address) {
     alert('Please enter your delivery address.');
     return;
@@ -334,10 +340,19 @@ function placeOrder(name, price, imgUrl) {
   fetch('https://ongod-phone-gadget-1.onrender.com/api/orders', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${gadgetToken}`
+      'Content-Type': 'application/json'
     },
-    body: JSON.stringify({name, price, imgUrl, orderType, address, payment})
+    body: JSON.stringify({
+      username: gadgetUsername,
+      product: name,
+      price: Number(price),
+      status: 'pending',
+      payment_method,
+      order_type: orderType,
+      address,
+      image: imgUrl,
+      date: new Date().toISOString()
+    })
   })
     .then(res => res.json())
     .then(data => {
@@ -353,20 +368,20 @@ function placeOrder(name, price, imgUrl) {
 
 // --- DETAILS MODAL ---
 function showDetails(id) {
-  fetch(`https://ongod-phone-gadget-1.onrender.com/api/gadgets/${id}`, {
-    headers: {Authorization: `Bearer ${gadgetToken}`}
-  })
+  fetch(`https://ongod-phone-gadget-1.onrender.com/api/products`)
     .then(res => res.json())
-    .then(gadget => {
+    .then(products => {
+      const gadget = products.find(p => p.id == id);
+      if (!gadget) return;
       const modalBg = document.getElementById('modal-bg');
       const modalContent = document.getElementById('modal-content');
       modalContent.innerHTML = `
         <button class="close-btn" onclick="document.getElementById('modal-bg').style.display='none'">&times;</button>
-        <img src="${gadget.imgUrl}" alt="${gadget.name}">
+        <img src="https://ongod-phone-gadget-1.onrender.com/images/${gadget.image}" alt="${gadget.name}">
         <h2>${gadget.name}</h2>
         <p>₦${gadget.price}</p>
         <div style="color:#3949ab;margin-bottom:10px;">${gadget.description || ''}</div>
-        <button onclick="showOrderModal('${gadget._id}','${gadget.name}','${gadget.price}','${gadget.imgUrl}')">Buy Now</button>
+        <button onclick="showOrderModal('${gadget.id}','${gadget.name}','${gadget.price}','https://ongod-phone-gadget-1.onrender.com/images/${gadget.image}')">Buy Now</button>
       `;
       modalBg.style.display = 'flex';
     });
@@ -378,10 +393,8 @@ function showNotifications() {
   fetchNotifications();
 }
 function fetchNotifications() {
-  if (!gadgetToken) return;
-  fetch('https://ongod-phone-gadget-1.onrender.com/api/notifications', {
-    headers: {Authorization: `Bearer ${gadgetToken}`}
-  })
+  if (!gadgetUsername) return;
+  fetch(`https://ongod-phone-gadget-1.onrender.com/api/notifications?user=${encodeURIComponent(gadgetUsername)}`)
     .then(res => res.json())
     .then(data => {
       const notifDiv = document.getElementById('notif-messages');
@@ -393,7 +406,7 @@ function fetchNotifications() {
       data.forEach(msg => {
         const div = document.createElement('div');
         div.style.marginBottom = '10px';
-        div.innerHTML = `<b>${msg.title}</b><br><span style="color:#3949ab;">${msg.body}</span><br><span style="font-size:0.9em;color:#888;">${new Date(msg.date).toLocaleString()}</span>`;
+        div.innerHTML = `<b>${msg.title || 'Notification'}</b><br><span style="color:#3949ab;">${msg.body || ''}</span><br><span style="font-size:0.9em;color:#888;">${msg.date ? new Date(msg.date).toLocaleString() : ''}</span>`;
         notifDiv.appendChild(div);
       });
     });
@@ -411,6 +424,16 @@ function sendCareMessage() {
   userMsg.innerHTML = `<span style="background:#e3e8ff;padding:6px 12px;border-radius:8px;display:inline-block;">${msg}</span>`;
   messagesDiv.appendChild(userMsg);
   input.value = '';
+  // Send to backend
+  fetch('https://ongod-phone-gadget-1.onrender.com/api/customer-care', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      text: msg,
+      username: gadgetUsername || '',
+      email: ''
+    })
+  });
   // Simulate bot reply
   setTimeout(() => {
     const botMsg = document.createElement('div');
