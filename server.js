@@ -16,7 +16,7 @@ const allowedOrigins = [
   'https://ongod-phone-gadget-1.onrender.com',
   'http://127.0.0.1:5501',
   'http://localhost:5501',
-  'https://light33432.github.io' // <-- GitHub Pages frontend
+  'https://light33432.github.io'
 ];
 app.use(cors({
   origin: function (origin, callback) {
@@ -29,6 +29,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Ensure images directory exists
 const imagesDir = path.join(__dirname, 'images');
@@ -36,7 +37,7 @@ if (!fs.existsSync(imagesDir)) {
   fs.mkdirSync(imagesDir);
 }
 
-// Serve static images from the "images" folder
+// Serve static images
 app.use('/images', express.static(imagesDir));
 
 const SECRET = process.env.SECRET || 'ongod_secret_key';
@@ -175,7 +176,7 @@ app.put('/api/orders/:id', (req, res) => {
   res.json({ success: true, order });
 });
 
-// Get all users
+// Get all users (without sensitive info)
 app.get('/api/users', (req, res) => {
   res.json(users.map(u => {
     const { password, verificationCode, ...rest } = u;
@@ -232,10 +233,10 @@ app.post('/api/users/verify', (req, res) => {
 app.post('/api/users/login', async (req, res) => {
   const { email, password } = req.body;
   const user = users.find(u => u.email === email);
-  if (!user) return res.status(401).json({ message: 'Invalid email or password.' });
+  if (!user) return res.status(401).json({ error: 'Invalid email or password.' });
   if (!user.verified) return res.status(403).json({ error: 'Please verify your email before logging in.' });
   const valid = await bcrypt.compare(password, user.password);
-  if (!valid) return res.status(401).json({ message: 'Invalid email or password.' });
+  if (!valid) return res.status(401).json({ error: 'Invalid email or password.' });
   const token = jwt.sign({ username: user.username, email: user.email }, SECRET, { expiresIn: '7d' });
   res.json({
     token,

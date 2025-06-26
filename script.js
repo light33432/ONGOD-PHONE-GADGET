@@ -7,54 +7,72 @@ let gadgetUsername = null;
 // --- LOGIN/REGISTER/VERIFY LOGIC ---
 document.addEventListener('DOMContentLoaded', () => {
   // Show login modal on load
-  document.getElementById('login-modal').style.display = 'flex';
-  document.getElementById('main-content').style.display = 'none';
+  const loginModal = document.getElementById('login-modal');
+  const mainContent = document.getElementById('main-content');
+  if (loginModal) loginModal.style.display = 'flex';
+  if (mainContent) mainContent.style.display = 'none';
 
-  // Switch to register
-  document.getElementById('switch-to-register').onclick = showRegister;
-  document.getElementById('switch-to-login').onclick = showLogin;
+  // Switch to register/login
+  const switchToRegister = document.getElementById('switch-to-register');
+  if (switchToRegister) switchToRegister.onclick = showRegister;
+  const switchToLogin = document.getElementById('switch-to-login');
+  if (switchToLogin) switchToLogin.onclick = showLogin;
 
-  // Register modal buttons
-  document.querySelector('#register-form-modal button:nth-of-type(1)').onclick = register;
-  document.querySelector('#register-form-modal button:nth-of-type(2)').onclick = closeRegisterForm;
+  // Register modal buttons (Register, Cancel)
+  const regBtns = document.querySelectorAll('#register-form-modal button');
+  if (regBtns[0]) regBtns[0].onclick = register;
+  if (regBtns[1]) regBtns[1].onclick = closeRegisterForm;
 
   // Login button
-  document.getElementById('login-btn').onclick = login;
+  const loginBtn = document.getElementById('login-btn');
+  if (loginBtn) loginBtn.onclick = login;
 
   // Accept/Decline verification
-  document.querySelector('#verify-modal button:nth-of-type(1)').onclick = acceptVerification;
-  document.querySelector('#verify-modal button:nth-of-type(2)').onclick = declineVerification;
+  const verifyBtns = document.querySelectorAll('#verify-modal button');
+  if (verifyBtns[0]) verifyBtns[0].onclick = acceptVerification;
+  if (verifyBtns[1]) verifyBtns[1].onclick = declineVerification;
 
-  // Hide register modal on load
-  document.getElementById('register-form-modal').style.display = 'none';
-  document.getElementById('verify-modal').style.display = 'none';
+  // Hide register/verify modal on load
+  const registerFormModal = document.getElementById('register-form-modal');
+  if (registerFormModal) registerFormModal.style.display = 'none';
+  const verifyModal = document.getElementById('verify-modal');
+  if (verifyModal) verifyModal.style.display = 'none';
 
   // Customer care chat
-  document.getElementById('care-chat-btn').onclick = () => {
+  const careChatBtn = document.getElementById('care-chat-btn');
+  if (careChatBtn) careChatBtn.onclick = () => {
     document.getElementById('care-chat-modal').style.display = 'flex';
   };
-  document.querySelector('#care-chat-modal button').onclick = () => {
+  const careChatCloseBtn = document.querySelector('#care-chat-modal button');
+  if (careChatCloseBtn) careChatCloseBtn.onclick = () => {
     document.getElementById('care-chat-modal').style.display = 'none';
   };
-  document.getElementById('care-chat-form').onsubmit = (e) => {
+  const careChatForm = document.getElementById('care-chat-form');
+  if (careChatForm) careChatForm.onsubmit = (e) => {
     e.preventDefault();
     sendCareMessage();
   };
 
   // Notification modal
-  document.querySelector('#notif-modal .close-btn').onclick = () => {
+  const notifCloseBtn = document.querySelector('#notif-modal .close-btn');
+  if (notifCloseBtn) notifCloseBtn.onclick = () => {
     document.getElementById('notif-modal').style.display = 'none';
   };
 
   // Search
-  document.getElementById('search-btn').onclick = searchGadgets;
-  document.getElementById('search-input').onkeydown = (e) => {
-    if (e.key === 'Enter') searchGadgets();
-  };
+  const searchBtn = document.getElementById('search-btn');
+  if (searchBtn) searchBtn.onclick = searchGadgets;
+  const searchInput = document.getElementById('search-input');
+  if (searchInput) {
+    searchInput.onkeydown = (e) => {
+      if (e.key === 'Enter') searchGadgets();
+    };
+  }
 
   // Hide loading after 2s
   setTimeout(() => {
-    document.getElementById('loading-screen').style.display = 'none';
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) loadingScreen.style.display = 'none';
   }, 2000);
 
   // Fetch gadgets if already logged in (for demo, not persistent)
@@ -187,7 +205,8 @@ const areaOptions = {
   Ondo: ['Akure', 'Ondo Town', 'Owo'],
   Ekiti: ['Ado-Ekiti', 'Ikere', 'Ilawe']
 };
-document.getElementById('reg-state').onchange = updateAreaOptions;
+const regState = document.getElementById('reg-state');
+if (regState) regState.onchange = updateAreaOptions;
 function updateAreaOptions() {
   const state = document.getElementById('reg-state').value;
   const areaSelect = document.getElementById('reg-area');
