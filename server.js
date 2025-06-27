@@ -14,8 +14,8 @@ const JWT_SECRET = 'your_super_secret_key'; // Change this to a strong secret in
 // app.use('/images', express.static(path.join(__dirname, 'images')));
 // app.use('/admin', express.static(path.join(__dirname, 'admin')));
 
-// Serve static files from root (for index.html, script.js, etc.)
-app.use(express.static(__dirname));
+// This line is not needed as Vercel serves root files automatically.
+// app.use(express.static(__dirname));
 
 // --- Health check endpoint ---
 app.get('/health', (req, res) => {
