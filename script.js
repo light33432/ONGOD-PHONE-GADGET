@@ -1,10 +1,9 @@
-// --- Modal & Auth Logic ---
+// --- ONGOD PHONE GADGET FRONTEND LOGIC ---
 document.addEventListener('DOMContentLoaded', () => {
-  // --- Set your API base URL here ---
-  // Use your deployed backend URL for production, or localhost for local development
-  const API_BASE = ''; // This is set for Render deployment
+  // --- API BASE URL ---
+  const API_BASE = 'https://ongod-phone-gadget-1.onrender.com';
 
-  // Elements
+  // --- Elements ---
   const loginModal = document.getElementById('login-modal');
   const loginBox = document.getElementById('login-box');
   const loginBtn = document.getElementById('login-btn');
@@ -28,13 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const careChatMessages = document.getElementById('care-chat-messages');
   const modalBg = document.getElementById('modal-bg');
   const modalContent = document.getElementById('modal-content');
-
-  // --- Notification History State ---
-  let notificationHistory = JSON.parse(localStorage.getItem('notificationHistory') || '[]');
-
-  // --- Notification Sound ---
-  const notifSound = new Audio('/notif.mp3'); // Sound file is in the root of the project
-  let lastNotifCount = notificationHistory.length;
 
   // --- Auth State ---
   let currentUser = null;
@@ -63,62 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   autoLogin();
 
-  // Sync notifications from backend for the logged-in user
-  async function syncNotificationsFromBackend() {
-    if (!currentUser || !currentUser.email) return;
-    try {
-      const res = await fetch(`${API_BASE}/api/notifications?email=${encodeURIComponent(currentUser.email)}`);
-      const data = await res.json();
-      if (data && Array.isArray(data.notifications)) {
-        notificationHistory = data.notifications;
-        localStorage.setItem('notificationHistory', JSON.stringify(notificationHistory));
-        renderNotifications();
-      }
-    } catch (err) {
-      renderNotifications();
-    }
-  }
-
-  function addNotification(msg, type = 'info') {
-    const entry = { msg, type, time: new Date().toLocaleString() };
-    notificationHistory.push(entry);
-    localStorage.setItem('notificationHistory', JSON.stringify(notificationHistory));
-    renderNotifications();
-  }
-
-  function renderNotifications() {
-    notifMessages.innerHTML = '';
-    if (notificationHistory.length === 0) {
-      notifMessages.innerHTML = '<div>No notifications yet.</div>';
-      lastNotifCount = 0;
-      return;
-    }
-    // Play sound if new notification
-    if (notificationHistory.length > lastNotifCount) {
-      notifSound.play();
-    }
-    lastNotifCount = notificationHistory.length;
-    notificationHistory.slice().reverse().forEach(n => {
-      notifMessages.innerHTML += `
-        <div style="margin-bottom:10px;">
-          <span style="color:${n.type === 'order' ? '#3949ab' : n.type === 'admin' ? '#2ecc71' : '#888'};font-weight:700;">
-            [${n.time}]
-          </span>
-          <span>${n.msg}</span>
-        </div>
-      `;
-    });
-  }
-
-  // --- Loading Screen ---
-  setTimeout(() => {
-    loadingScreen.style.display = 'none';
-    // Only show login if not already logged in
-    if (!token || !currentUser) {
-      loginModal.style.display = 'flex';
-    }
-  }, 1200);
-
   // --- Modal Switching ---
   switchToRegister.onclick = () => {
     loginBox.style.display = 'none';
@@ -131,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     regError.textContent = '';
   };
 
-  // --- Login/Register Logic (Backend) ---
+  // --- Login/Register Logic ---
   loginBtn.onclick = async () => {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
@@ -161,10 +97,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Register Form Logic (Backend)
+  // Register Form Logic
   registerFormModal.querySelector('button:nth-of-type(1)').onclick = async (e) => {
     e.preventDefault();
-    // Validate fields
     const email = document.getElementById('email').value.trim();
     const phone = document.getElementById('reg-phone').value.trim();
     const username = document.getElementById('reg-username').value.trim();
@@ -190,13 +125,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       registerFormModal.style.display = 'none';
       verifyModal.style.display = 'flex';
-      // Store email for verification step
       verifyModal.dataset.email = email;
     } catch (err) {
       regError.textContent = 'Network error.';
     }
   };
-  // Cancel registration
   registerFormModal.querySelector('button:nth-of-type(2)').onclick = (e) => {
     e.preventDefault();
     registerFormModal.style.display = 'none';
@@ -241,7 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
       verifyError.textContent = 'Network error.';
     }
   };
-
   cancelVerifyBtn.onclick = () => {
     verifyModal.style.display = 'none';
     loginModal.style.display = 'flex';
@@ -266,7 +198,51 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   };
 
-  // --- Notification Modal ---
+  // --- Notification Logic ---
+  let notificationHistory = [];
+  let lastNotifCount = 0;
+  const notifSound = new Audio('/notif.mp3');
+
+  async function syncNotificationsFromBackend() {
+    if (!currentUser || !currentUser.email) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/notifications?email=${encodeURIComponent(currentUser.email)}`);
+      const data = await res.json();
+      if (data && Array.isArray(data.notifications)) {
+        notificationHistory = data.notifications;
+        renderNotifications();
+      }
+    } catch (err) {
+      renderNotifications();
+    }
+  }
+  function addNotification(msg, type = 'info') {
+    const entry = { msg, type, time: new Date().toLocaleString() };
+    notificationHistory.push(entry);
+    renderNotifications();
+  }
+  function renderNotifications() {
+    notifMessages.innerHTML = '';
+    if (notificationHistory.length === 0) {
+      notifMessages.innerHTML = '<div>No notifications yet.</div>';
+      lastNotifCount = 0;
+      return;
+    }
+    if (notificationHistory.length > lastNotifCount) {
+      notifSound.play();
+    }
+    lastNotifCount = notificationHistory.length;
+    notificationHistory.slice().reverse().forEach(n => {
+      notifMessages.innerHTML += `
+        <div style="margin-bottom:10px;">
+          <span style="color:${n.type === 'order' ? '#3949ab' : n.type === 'admin' ? '#2ecc71' : '#888'};font-weight:700;">
+            [${n.time}]
+          </span>
+          <span>${n.msg}</span>
+        </div>
+      `;
+    });
+  }
   notifBtn.onclick = () => {
     renderNotifications();
     notifModal.style.display = 'flex';
@@ -275,10 +251,8 @@ document.addEventListener('DOMContentLoaded', () => {
     notifModal.style.display = 'none';
   };
 
-  // --- Customer Care Chat (with admin reply support) ---
+  // --- Customer Care Chat ---
   let careChatOpen = false;
-
-  // Load chat history from backend
   async function loadChatHistory() {
     if (!currentUser) return;
     try {
@@ -295,11 +269,9 @@ document.addEventListener('DOMContentLoaded', () => {
       careChatMessages.scrollTop = careChatMessages.scrollHeight;
     } catch {}
   }
-
   if (!document.getElementById('care-chat-float')) {
     const floatBtn = document.createElement('button');
     floatBtn.id = 'care-chat-float';
-    // Use the correct filename for the image
     floatBtn.innerHTML = '<img src="/images/customercare.jpg" alt="Care" style="width:32px;height:32px;border-radius:50%;">';
     floatBtn.style.cssText = 'position:fixed;bottom:100px;right:30px;background:#2ecc71;border:none;border-radius:50%;width:56px;height:56px;box-shadow:0 2px 8px rgba(0,0,0,0.18);z-index:10003;cursor:pointer;';
     document.body.appendChild(floatBtn);
@@ -317,7 +289,6 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     const msg = careChatInput.value.trim();
     if (!msg || !currentUser) return;
-    // Send to backend
     await fetch(`${API_BASE}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -327,10 +298,105 @@ document.addEventListener('DOMContentLoaded', () => {
     await loadChatHistory();
   };
 
+  // --- Fetch Gadget Data & Render ---
+  let phones = [], laptops = [], accessories = [];
+  async function fetchGadgets() {
+    try {
+      const res = await fetch(`${API_BASE}/api/gadgets-with-images`);
+      const data = await res.json();
+      phones = data.phones;
+      laptops = data.laptops;
+      accessories = data.accessories;
+      renderGadgets(phones, 'phones-list');
+      renderGadgets(laptops, 'laptops-list');
+      renderGadgets(accessories, 'accessories-list');
+    } catch (err) {}
+  }
+  function renderGadgets(list, containerId) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    list.forEach(item => {
+      const imgSrc = item.imageBase64 || item.img || '/images/placeholder.png';
+      const div = document.createElement('div');
+      div.className = 'Gadget-item';
+      div.innerHTML = `
+        <img src="${imgSrc}" alt="${item.name}" onerror="this.onerror=null;this.src='/images/placeholder.png';">
+        <h2>${item.name}</h2>
+        <p>${item.price}</p>
+        <div class="button-group">
+          <button class="buy-now-btn" style="background:#3949ab;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-weight:700;cursor:pointer;">Buy Now</button>
+        </div>
+      `;
+      div.querySelector('.buy-now-btn').onclick = () => openGadgetModal(item);
+      container.appendChild(div);
+    });
+  }
+
+  // --- Search Functionality ---
+  const searchInput = document.getElementById('search-input');
+  const searchBtn = document.getElementById('search-btn');
+  searchBtn.onclick = () => {
+    const q = searchInput.value.trim().toLowerCase();
+    filterGadgets(q);
+  };
+  function filterGadgets(query) {
+    renderGadgets(
+      phones.filter(p => p.name.toLowerCase().includes(query)), 'phones-list'
+    );
+    renderGadgets(
+      laptops.filter(l => l.name.toLowerCase().includes(query)), 'laptops-list'
+    );
+    renderGadgets(
+      accessories.filter(a => a.name.toLowerCase().includes(query)), 'accessories-list'
+    );
+  }
+
+  // --- Order/Notification Logic ---
+  async function sendOrderToAdmin(order) {
+    try {
+      const res = await fetch(`${API_BASE}/api/order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(order)
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        pollAdminAction(order);
+      }
+    } catch (err) {
+      addNotification('Failed to send order to admin.', 'error');
+    }
+  }
+  function pollAdminAction(order) {
+    let interval = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/order-status?email=${encodeURIComponent(order.email)}&item=${encodeURIComponent(order.item.name)}`);
+        const data = await res.json();
+        if (data && data.status && data.status !== 'pending') {
+          clearInterval(interval);
+          await syncNotificationsFromBackend();
+          if (data.status === 'confirmed') {
+            addNotification(`Admin confirmed your order for ${order.item.name}.`, 'admin');
+          } else if (data.status === 'rejected') {
+            addNotification(`Admin rejected your order for ${order.item.name}.`, 'admin');
+          }
+          renderNotifications();
+        }
+      } catch (err) {}
+    }, 5000);
+  }
+  async function fetchOrderNotifications() {
+    await syncNotificationsFromBackend();
+  }
+
+  // --- Initial render ---
+  fetchGadgets();
+
   // --- Gadget Modal (Buy Now/Details) ---
   window.openGadgetModal = function(item) {
+    const imgSrc = item.imageBase64 || item.img || '/images/placeholder.png';
     modalContent.innerHTML = `
-      <img src="${item.img}" alt="${item.name}" onerror="this.onerror=null;this.src='/images/placeholder.png';">
+      <img src="${imgSrc}" alt="${item.name}" onerror="this.onerror=null;this.src='/images/placeholder.png';">
       <h2>${item.name}</h2>
       <p>${item.price}</p>
       <p>${item.desc}</p>
@@ -340,8 +406,6 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     modalBg.style.display = 'flex';
     modalContent.querySelector('.close-btn').onclick = () => modalBg.style.display = 'none';
-
-    // Buy Now logic
     modalContent.querySelector('#buy-now-btn').onclick = () => {
       const buyOptions = modalContent.querySelector('#buy-options');
       buyOptions.innerHTML = `
@@ -351,7 +415,6 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div id="buy-extra"></div>
       `;
-      // Pick Up
       buyOptions.querySelector('#pickup-btn').onclick = () => {
         let storeAddress = "Ikeja Lagos";
         let storeText = "Visit our Ikeja, Lagos store to pick up your gadget!";
@@ -374,7 +437,6 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         `;
         buyOptions.querySelector('#confirm-pickup-btn').onclick = async () => {
-          // Send order to admin
           const order = {
             email: currentUser.email,
             item,
@@ -387,7 +449,6 @@ document.addEventListener('DOMContentLoaded', () => {
           await sendOrderToAdmin(order);
         };
       };
-      // Delivery
       buyOptions.querySelector('#delivery-btn').onclick = () => {
         if (currentUser && currentUser.address) {
           const deliveryAddress = currentUser.address;
@@ -418,7 +479,6 @@ document.addEventListener('DOMContentLoaded', () => {
             await sendOrderToAdmin(order);
           };
         } else {
-          // No address, ask for it
           buyOptions.querySelector('#buy-extra').innerHTML = `
             <form id="delivery-form" style="margin-top:10px;text-align:left;">
               <label>Enter your delivery address:<br>
@@ -465,110 +525,4 @@ document.addEventListener('DOMContentLoaded', () => {
   modalBg.onclick = (e) => {
     if (e.target === modalBg) modalBg.style.display = 'none';
   };
-
-  // --- Fetch Gadget Data from Backend & Render ---
-  let phones = [], laptops = [], accessories = [];
-  async function fetchGadgets() {
-    try {
-      const res = await fetch(`${API_BASE}/api/gadgets`);
-      const data = await res.json();
-      phones = data.phones;
-      laptops = data.laptops;
-      accessories = data.accessories;
-      renderGadgets(phones, 'phones-list');
-      renderGadgets(laptops, 'laptops-list');
-      renderGadgets(accessories, 'accessories-list');
-    } catch (err) {
-      // handle error
-    }
-  }
-
-  function renderGadgets(list, containerId) {
-    const container = document.getElementById(containerId);
-    container.innerHTML = '';
-    list.forEach(item => {
-      const div = document.createElement('div');
-      div.className = 'Gadget-item';
-      div.innerHTML = `
-        <img src="${item.img}" alt="${item.name}" onerror="this.onerror=null;this.src='/images/placeholder.png';">
-        <h2>${item.name}</h2>
-        <p>${item.price}</p>
-        <div class="button-group">
-          <button class="buy-now-btn" style="background:#3949ab;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-weight:700;cursor:pointer;">Buy Now</button>
-        </div>
-      `;
-      div.querySelector('.buy-now-btn').onclick = () => openGadgetModal(item);
-      container.appendChild(div);
-    });
-  }
-
-  // --- Search Functionality (Basic) ---
-  const searchInput = document.getElementById('search-input');
-  const searchBtn = document.getElementById('search-btn');
-  searchBtn.onclick = () => {
-    const q = searchInput.value.trim().toLowerCase();
-    filterGadgets(q);
-  };
-
-  function filterGadgets(query) {
-    renderGadgets(
-      phones.filter(p => p.name.toLowerCase().includes(query)), 'phones-list'
-    );
-    renderGadgets(
-      laptops.filter(l => l.name.toLowerCase().includes(query)), 'laptops-list'
-    );
-    renderGadgets(
-      accessories.filter(a => a.name.toLowerCase().includes(query)), 'accessories-list'
-    );
-  }
-
-  // --- Order/Notification Logic ---
-  async function sendOrderToAdmin(order) {
-    try {
-      // Send order to backend (admin)
-      const res = await fetch(`${API_BASE}/api/order`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(order)
-      });
-      const data = await res.json();
-      if (data && data.success) {
-        // Wait for admin action (simulate polling)
-        pollAdminAction(order);
-      }
-    } catch (err) {
-      addNotification('Failed to send order to admin.', 'error');
-    }
-  }
-
-  // Poll for admin action (simulate with polling every 5s)
-  function pollAdminAction(order) {
-    let interval = setInterval(async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/order-status?email=${encodeURIComponent(order.email)}&item=${encodeURIComponent(order.item.name)}`);
-        const data = await res.json();
-        if (data && data.status && data.status !== 'pending') {
-          clearInterval(interval);
-          // Sync notifications from backend after admin action
-          await syncNotificationsFromBackend();
-          if (data.status === 'confirmed') {
-            addNotification(`Admin confirmed your order for ${order.item.name}.`, 'admin');
-          } else if (data.status === 'rejected') {
-            addNotification(`Admin rejected your order for ${order.item.name}.`, 'admin');
-          }
-          renderNotifications();
-        }
-      } catch (err) {
-        // ignore polling error
-      }
-    }, 5000);
-  }
-
-  // Fetch order notifications on login
-  async function fetchOrderNotifications() {
-    await syncNotificationsFromBackend();
-  }
-
-  // Initial render
-  fetchGadgets();
 });

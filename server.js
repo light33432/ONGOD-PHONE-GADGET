@@ -3,6 +3,8 @@ const cors = require('cors');
 const nodemailer = require('nodemailer');
 const path = require('path');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const mime = require('mime'); // Make sure to install this package: npm install mime
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -353,6 +355,28 @@ app.get('/api/notifications', (req, res) => {
 // --- ADDITIONAL: Serve favicon.ico if present ---
 app.get('/favicon.ico', (req, res) => {
   res.sendFile(path.join(__dirname, 'favicon.ico'));
+});
+
+// --- NEW ENDPOINT: Get all gadgets with images as base64 ---
+app.get('/api/gadgets-with-images', async (req, res) => {
+  const categories = Object.keys(gadgets);
+  const result = {};
+  for (const cat of categories) {
+    result[cat] = await Promise.all(gadgets[cat].map(async (gadget) => {
+      const imagePath = path.join(__dirname, gadget.img);
+      try {
+        const data = fs.readFileSync(imagePath);
+        const mimeType = mime.getType(imagePath);
+        return {
+          ...gadget,
+          imageBase64: `data:${mimeType};base64,${data.toString('base64')}`
+        };
+      } catch {
+        return { ...gadget, imageBase64: null };
+      }
+    }));
+  }
+  res.json(result);
 });
 
 // Start the server (Render needs this)
