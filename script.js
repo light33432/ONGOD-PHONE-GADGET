@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let notificationHistory = JSON.parse(localStorage.getItem('notificationHistory') || '[]');
 
   // --- Notification Sound ---
-  const notifSound = new Audio('/images/notif.mp3'); // Place notif.mp3 in your images folder
+  const notifSound = new Audio('/notif.mp3'); // Sound file is in the root of the public folder
   let lastNotifCount = notificationHistory.length;
 
   // --- Auth State ---
