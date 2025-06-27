@@ -7,17 +7,21 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Serve static files from 'public' folder
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Serve images statically
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
 // In-memory users: { email, username, password, verified, code }
 const users = [];
 
+// Use environment variables for Gmail credentials
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'laptopgadgetsphonegadgets@gmail.com', // your Gmail address
-    pass: 'leej owtq mkpd jafx'                  // your Gmail App Password
+    user: process.env.GMAIL_USER, // set in Render dashboard
+    pass: process.env.GMAIL_PASS  // set in Render dashboard
   }
 });
 
@@ -30,7 +34,7 @@ app.post('/api/register', async (req, res) => {
   users.push({ email, username, password, verified: false, code });
   try {
     await transporter.sendMail({
-      from: 'ONGOD Gadget Shop <laptopgadgetsphonegadgets@gmail.com>',
+      from: `ONGOD Gadget Shop <${process.env.GMAIL_USER}>`,
       to: email,
       subject: 'ONGOD Gadget Shop Verification Code',
       text: `Your verification code is: ${code}`
