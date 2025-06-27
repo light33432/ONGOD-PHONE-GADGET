@@ -1,7 +1,8 @@
 // --- Modal & Auth Logic ---
 document.addEventListener('DOMContentLoaded', () => {
-  // Set your backend API base URL here (public Render URL)
-  const API_BASE = 'https://ongod-phone-gadget-1.onrender.com';
+  // --- Set your API base URL here ---
+  // Use your deployed backend URL for production, or localhost for local development
+  const API_BASE = ''; // This is set for Vercel deployment
 
   // Elements
   const loginModal = document.getElementById('login-modal');
@@ -32,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let notificationHistory = JSON.parse(localStorage.getItem('notificationHistory') || '[]');
 
   // --- Notification Sound ---
-  const notifSound = new Audio('images/notif.mp3'); // Place notif.mp3 in your images folder
+  const notifSound = new Audio('/images/notif.mp3'); // Place notif.mp3 in your images folder
   let lastNotifCount = notificationHistory.length;
 
   // --- Auth State ---
@@ -298,7 +299,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!document.getElementById('care-chat-float')) {
     const floatBtn = document.createElement('button');
     floatBtn.id = 'care-chat-float';
-    floatBtn.innerHTML = '<img src="images/customer care.jpg" alt="Care" style="width:32px;height:32px;border-radius:50%;">';
+    // Use the correct filename for the image
+    floatBtn.innerHTML = '<img src="/images/customercare.jpg" alt="Care" style="width:32px;height:32px;border-radius:50%;">';
     floatBtn.style.cssText = 'position:fixed;bottom:100px;right:30px;background:#2ecc71;border:none;border-radius:50%;width:56px;height:56px;box-shadow:0 2px 8px rgba(0,0,0,0.18);z-index:10003;cursor:pointer;';
     document.body.appendChild(floatBtn);
     floatBtn.onclick = () => {
@@ -328,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Gadget Modal (Buy Now/Details) ---
   window.openGadgetModal = function(item) {
     modalContent.innerHTML = `
-      <img src="${item.img}" alt="${item.name}" onerror="this.onerror=null;this.src='images/placeholder.png';">
+      <img src="${item.img}" alt="${item.name}" onerror="this.onerror=null;this.src='/images/placeholder.png';">
       <h2>${item.name}</h2>
       <p>${item.price}</p>
       <p>${item.desc}</p>
@@ -488,7 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const div = document.createElement('div');
       div.className = 'Gadget-item';
       div.innerHTML = `
-        <img src="${item.img}" alt="${item.name}" onerror="this.onerror=null;this.src='images/placeholder.png';">
+        <img src="${item.img}" alt="${item.name}" onerror="this.onerror=null;this.src='/images/placeholder.png';">
         <h2>${item.name}</h2>
         <p>${item.price}</p>
         <div class="button-group">
