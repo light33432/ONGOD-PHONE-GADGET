@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:3000';
+const API_BASE = 'https://ongod-phone-gadget-1.onrender.com';
 
 let isAuthenticated = false;
 
