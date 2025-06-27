@@ -1,4 +1,4 @@
-const API_BASE = 'https://ongod-phone-gadget-1.onrender.com';
+const API_BASE = window.location.origin;
 
 let isAuthenticated = false;
 
