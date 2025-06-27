@@ -31,15 +31,15 @@ let users = [];
 let gadgets = {
   phones: [
     { name: 'iPhone 15 Pro', price: '₦1,200,000', img: '/images/iphone15.png', desc: 'Latest Apple flagship.' },
-    { name: 'Samsung S24 Ultra', price: '₦1,100,000', img: '/images/s24ultra.png', desc: 'Top Samsung phone.' }
+    { name: 'Samsung S24 Ultra', price: '₦1,100,000', img: '/images/Samsung4.jpg', desc: 'Top Samsung phone.' }
   ],
   laptops: [
-    { name: 'MacBook Air M3', price: '₦1,500,000', img: '/images/macbookairm3.png', desc: 'Apple M3 chip.' },
-    { name: 'HP Spectre x360', price: '₦950,000', img: '/images/hpspectre.png', desc: 'Premium 2-in-1.' }
+    { name: 'MacBook 2025 pro', price: '₦1,500,000', img: '/images/Macbook.webp', desc: 'Apple M3 chip.' },
+    { name: 'HP Spectre x360', price: '₦950,000', img: '/images/hplaptop600.webp', desc: 'Premium 2-in-1.' }
   ],
   accessories: [
-    { name: 'AirPods Pro', price: '₦180,000', img: '/images/airpodspro.png', desc: 'Noise-cancelling earbuds.' },
-    { name: 'Anker Power Bank', price: '₦35,000', img: '/images/ankerpowerbank.png', desc: 'Fast charging.' }
+    { name: 'AirPods Pro', price: '₦180,000', img: '/images/Airpodap.jpg', desc: 'Noise-cancelling earbuds.' },
+    { name: 'Anker Power Bank', price: '₦35,000', img: '/images/Ankerpower.jpg', desc: 'Fast charging.' }
   ]
 };
 
