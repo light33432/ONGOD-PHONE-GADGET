@@ -2,7 +2,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   // --- Set your API base URL here ---
   // Use your deployed backend URL for production, or localhost for local development
-  const API_BASE = ''; // This is set for Vercel deployment
+  const API_BASE = ''; // This is set for Render deployment
 
   // Elements
   const loginModal = document.getElementById('login-modal');
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let notificationHistory = JSON.parse(localStorage.getItem('notificationHistory') || '[]');
 
   // --- Notification Sound ---
-  const notifSound = new Audio('/notif.mp3'); // Sound file is in the root of the public folder
+  const notifSound = new Audio('/notif.mp3'); // Sound file is in the root of the project
   let lastNotifCount = notificationHistory.length;
 
   // --- Auth State ---

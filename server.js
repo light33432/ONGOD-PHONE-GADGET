@@ -9,13 +9,11 @@ app.use(express.json());
 
 const JWT_SECRET = 'your_super_secret_key'; // Change this to a strong secret in production
 
-// Vercel serves the 'public' folder automatically.
-// These lines are no longer needed and can be removed.
-// app.use('/images', express.static(path.join(__dirname, 'images')));
-// app.use('/admin', express.static(path.join(__dirname, 'admin')));
-
-// This line is not needed as Vercel serves root files automatically.
-// app.use(express.static(__dirname));
+// Serve static files for images and admin
+app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use('/admin', express.static(path.join(__dirname, 'admin')));
+// Serve frontend files (index.html, script.js, etc.) from root
+app.use(express.static(__dirname));
 
 // --- Health check endpoint ---
 app.get('/health', (req, res) => {
@@ -116,7 +114,7 @@ app.post('/api/register', async (req, res) => {
   // Send code to email
   try {
     await transporter.sendMail({
-      from: 'ONGOD PHONE GADGET <laptopgadgetsphonegadgets@gmail.com>', // Only show business name and email
+      from: 'ONGOD PHONE GADGET <laptopgadgetsphonegadgets@gmail.com>',
       to: email,
       subject: 'ONGOD Phone Gadget Verification Code',
       text: `Your verification code is: ${code}`
@@ -259,7 +257,7 @@ app.post('/api/order', async (req, res) => {
   // Send email to user
   try {
     await transporter.sendMail({
-      from: 'ONGOD PHONE GADGET <laptopgadgetsphonegadgets@gmail.com>', // Only show business name and email
+      from: 'ONGOD PHONE GADGET <laptopgadgetsphonegadgets@gmail.com>',
       to: email,
       subject,
       text: message
@@ -357,5 +355,8 @@ app.get('/favicon.ico', (req, res) => {
   res.sendFile(path.join(__dirname, 'favicon.ico'));
 });
 
-// Export the app for Vercel
-module.exports = app;
+// Start the server (Render needs this)
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
